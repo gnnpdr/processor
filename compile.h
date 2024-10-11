@@ -17,10 +17,10 @@ enum Commands
     HLT = 10
 };
 
-void make_asm_file(char** name);
+void make_asm_file(char** name, size_t* amount);
 
 void compile (FILE* file, FILE* asm_file, size_t* amount);
 
-void make_array(FILE* asm_file, size_t amount);
+void make_array(size_t amount, int* program);
 
 #endif //_COMPILE_H_

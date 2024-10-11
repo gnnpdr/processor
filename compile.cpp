@@ -2,18 +2,16 @@
 
 #include "compile.h"
 
-void make_asm_file(char** name)
+void make_asm_file(char** name, size_t* amount)
 {
     FILE* file;
     file = fopen(*name, "r");
 
     FILE* asm_file;
     asm_file = fopen("asm.txt", "a");  //сделать так, чтобы компилирования, файл закрывался, а при новой компиляции открывался новый. кейсы?
-
-    size_t amount = 0;
-    compile(file, asm_file, &amount);
-    make_array(asm_file, amount);
-
+    
+    compile(file, asm_file, amount);
+    
     fclose(file);
     fclose(asm_file);
 }
@@ -30,8 +28,8 @@ void compile (FILE* file, FILE* asm_file, size_t* amount)
 
         if (strcmp(cmd, "push") == 0)
         {
-            fprintf (asm_file, "%d ", PUSH);  //fprintf записывает как символы, надо использовать fwrite
-            args_amount++;
+            fprintf (asm_file, "%d ", PUSH);  //fprintf записывает как символы, надо использовать fwrite, но он будет записывать в буфер, а я хочу преобразовать через енам и сразу добавить в файл
+            args_amount++;                    
             fscanf (file, "%d", &arg);          //пока ввод здесь, можно сделать в 
             fprintf(asm_file, "%d\n", arg);
             args_amount++;
@@ -104,13 +102,18 @@ void compile (FILE* file, FILE* asm_file, size_t* amount)
     *amount = args_amount;
 }
 
-void make_array(FILE* asm_file, size_t amount)
+void make_array(size_t amount, int* program)
 {
-    int* program = (int*)calloc(amount, sizeof(int));
+    FILE* asm_file;
+    asm_file = fopen("asm.txt", "r");  //не двоичный же? мы не строки читаем, а цифры
+
+    program = (int*)calloc(amount, sizeof(int));
     fread(program, sizeof(int), amount, asm_file);
 
-    for (int i = 0; i < amount; i++)
+    /*for (int i = 0; i < amount; i++)
     {
         printf("%d ", program[i]);
-    }
+    }*/
+
+    fclose(asm_file);
 }
