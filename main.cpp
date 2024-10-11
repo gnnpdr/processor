@@ -2,6 +2,7 @@
 #include <math.h>
 
 #include "stack.h"
+#include "compile.h"
 #include "stack_operations.h"
 
 void run (Stack* stk, FILE* file);
@@ -9,15 +10,17 @@ void print_stk_elements(Stack* stk);
 
 int main (int argc, char** argv)
 {
-    FILE* file;
-    file = fopen(argv[1], "r");
+    char* name[50] = {argv[1]};
 
     Stack stk = {};
 
     ctor(&stk);
-    run(&stk, file);
+    printf("oh no\n");
+    make_asm_file(name);
+
     dtor(&stk);
 }
+
 
 void run (Stack* stk, FILE* file)
 {
@@ -91,7 +94,7 @@ void run (Stack* stk, FILE* file)
     }
 }
 
-void print_stk_elements(Stack* stk)    //пока сделаю так, чтобы вывод был в ком строку, в файле неудобно читать
+void print_stk_elements(Stack* stk)    //вывод в ком строку, в файле неудобно читать
 {
     size_t size = stk->size;
     size_t capacity = stk->capacity;

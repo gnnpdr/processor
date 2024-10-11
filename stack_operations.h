@@ -1,7 +1,7 @@
 #ifndef _PUSH_H_
 #define _PUSH_H_
 
-#include "stack.h"
+#include "compile.h"
 
 void push(Stack* stk, stack_element_t element);
 
