@@ -4,31 +4,33 @@
 #include "stack.h"
 #include "stack_operations.h"
 
-void run (Stack* stk);
+void run (Stack* stk, FILE* file);
 void print_stk_elements(Stack* stk);
 
-int main ()
+int main (int argc, char** argv)
 {
+    FILE* file;
+    file = fopen(argv[1], "r");
+
     Stack stk = {};
 
     ctor(&stk);
-    run(&stk);
+    run(&stk, file);
     dtor(&stk);
 }
 
-void run (Stack* stk)
+void run (Stack* stk, FILE* file)
 {
     while (1)
     {
         char cmd[50] = "";   //размер? наверное, стоит что-то придумать, чтобы можно было его менять. или чтобы он увеличивался
-        scanf("%s", cmd);
+        fscanf(file, "%s", cmd);
         int arg = 0;
 
         if (strcmp(cmd, "push") == 0)
         {
-            scanf ("%d", &arg);
+            fscanf (file, "%d", &arg);          //пока ввод здесь, можно сделать в 
             push (stk, arg);
-            printf("pushed\n");
         }
 
         else if (strcmp(cmd, "add") == 0)
@@ -61,19 +63,19 @@ void run (Stack* stk)
 
         else if (strcmp(cmd, "sqrt") == 0)
         {
-            scanf ("%d", &arg);
+            fscanf (file, "%d", &arg);
             push (stk, pow(arg, 0.5));
         }
 
         else if (strcmp(cmd, "sin") == 0)
         {
-            scanf ("%d", &arg);
+            fscanf (file, "%d", &arg);
             push (stk, sin(arg));
         }
 
         else if (strcmp(cmd, "cos") == 0)
         {
-            scanf ("%d", &arg);
+            fscanf (file, "%d", &arg);
             push (stk, cos(arg));
         }
 
@@ -89,7 +91,7 @@ void run (Stack* stk)
     }
 }
 
-void print_stk_elements(Stack* stk)
+void print_stk_elements(Stack* stk)    //пока сделаю так, чтобы вывод был в ком строку, в файле неудобно читать
 {
     size_t size = stk->size;
     size_t capacity = stk->capacity;
