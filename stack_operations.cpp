@@ -2,31 +2,40 @@
 
 #include "stack_operations.h"
 
-void push(Stack* stk, stack_element_t element)
+StkErrors stk_push(Stack* stk, stack_element_t element, StkErrors* err)
 {
+    CHECK_STK(stk, err)
 
-    stack_element_t* data      = stk->data;
+    stack_element_t* data = stk->data;
     size_t           size      = stk->size;
     size_t           capacity  = stk->capacity;
 
     if (size >= capacity)
     {
         size_t new_capacity = capacity * delta;
-        change_capacity(stk, new_capacity);
+        change_capacity(stk, new_capacity, capacity, err);
+        RETURN(*err)
     }
 
     data[size] = element;
-
     size++;
     stk->size = size;
+    
+    #ifdef DEBUG
+    stk->hash = stk_hash(stk);
+    #endif
+
+    CHECK_STK(stk, err)
+    return ALL_RIGHT;
 }
 
-void change_capacity(Stack* stk, size_t new_capacity)
+StkErrors change_capacity(Stack* stk, size_t new_capacity, size_t capacity, StkErrors* err)
 {
-    stack_element_t* data = stk->data;
-    size_t capacity = stk->capacity;
+    CHECK_STK(stk, err)
 
-    data = (stack_element_t*)realloc(data, (new_capacity)*sizeof(stack_element_t));
+    stack_element_t* data = stk->data;
+
+    data = (stack_element_t*)realloc(data, (new_capacity CANARY_CAPACITY_ADD)*sizeof(stack_element_t));
     #ifdef DEBUG
     if (data == nullptr)
     {
@@ -37,13 +46,26 @@ void change_capacity(Stack* stk, size_t new_capacity)
 
     if (new_capacity > capacity)
     {
-        for (size_t i = 0; i < capacity; i++)
-            data[capacity + i] = poison;
+        for (size_t i = 0; i <= capacity LEFT_CANARY_ADD; i++)
+            data[capacity LEFT_CANARY_ADD + i] = poison;
     }
+
+    stk->capacity = new_capacity;
+    stk->data = data;
+
+    #ifdef DEBUG
+    data[new_capacity LEFT_CANARY_ADD] = right_canary_value;
+    
+    #endif
+
+    CHECK_STK(stk, err)
+    return ALL_RIGHT;
 }
 
-stack_element_t pop(Stack* stk)
+StkErrors stk_pop(Stack* stk, stack_element_t* elem, StkErrors* err)
 {
+    CHECK_STK(stk, err)
+
     size_t size = stk->size;
     size_t capacity = stk->capacity;
     stack_element_t* data = stk->data;
@@ -51,13 +73,23 @@ stack_element_t pop(Stack* stk)
     if (size == (capacity / double_delta))
     {
         size_t new_capacity = capacity / delta;
-        change_capacity(stk, new_capacity);
+        change_capacity(stk, new_capacity, capacity, err);
+        RETURN(*err)
     }
     
-    size--;   //по идее сначала заполнение пойзонами, а потом изменение размера, разный вывод при дебаге и недебаге, ничего не понимаю
-    stack_element_t arg = data[size];
+    *elem = data[size];
+
+    size--; 
     data[size] = poison;
     
     stk->size = size;
-    return arg;
+
+    stk->data = data;
+
+    #ifdef DEBUG
+    stk->hash = stk_hash(stk);
+    #endif
+
+    CHECK_STK(stk, err)
+    return ALL_RIGHT;
 }

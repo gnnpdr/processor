@@ -3,35 +3,14 @@
 
 #include <stdlib.h>
 #include <string.h>
-
-typedef int stack_element_t;
-static const stack_element_t poison = 13;
+#include "check.h"
 
 static const int stk_amount = 4;
 static const int delta = 2;
 static const int double_delta = 4;
 
-struct Stack
-{
-    stack_element_t* data;
-    size_t size;
-    size_t capacity;
-};
+StkErrors stk_ctor(Stack* stk, const char* file, const char* func, const int code_str, StkErrors* err);
 
-enum StkErrors
-{
-    ALL_RIGHT,
-    NO_PLACE,
-    PROBLEM,
-    BUFFER_OVERFLOW,
-    HASH_PROBLEM,
-    VALUE_PROBLEM,
-    UNKNOWN
-};
-
-
-void ctor (Stack* stk);
-
-void dtor(Stack* stk);
+void stk_dtor(Stack* stk);
 
 #endif //_CTOR_H_
