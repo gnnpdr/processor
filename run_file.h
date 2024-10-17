@@ -3,7 +3,7 @@
 
 #include "stack_operations.h"
 
-void run (Stack* stk, Proc* processor, StkErrors* err);
+void run_prog (Stack* stk, Proc* processor, StkErrors* err);
 
 void ja(Proc* processor, Stack* stk);
 void jae(Proc* processor, Stack* stk);

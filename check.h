@@ -35,7 +35,8 @@ enum StkErrors
     BUFFER_OVERFLOW,
     HASH_PROBLEM,
     VALUE_PROBLEM,
-    UNKNOWN
+    UNKNOWN,
+    FILE_PROBLEM
 };
 
 #ifdef DEBUG

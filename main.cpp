@@ -21,10 +21,10 @@ int main (int argc, char** argv)
 
     strcpy(name, argv[1]);
 
-    file_transformation(name, &processor);
+    file_transformation(name, &processor, &err);
 
     Stack stk = {};
 
-    run_prog(&stk, &processor, err);
+    run_prog(&stk, &processor, &err);
 }
 

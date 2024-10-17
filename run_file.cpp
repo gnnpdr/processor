@@ -9,12 +9,13 @@ void run_prog (Stack* const stk, Proc* const processor, StkErrors* const err)
     assert(err != nullptr);
 
     size_t ip = processor->ip;
-    int* program = proseccor->new_file_buf;
+    int* program = processor->new_file_buf;
 
     stack_element_t elem = 0;
     int first_el = 0;
     int sec_el = 0;
     int arg = 0;
+    int amount = processor->input_file_commands_amount;
 
     while(ip < amount)
     {
@@ -67,7 +68,7 @@ void run_prog (Stack* const stk, Proc* const processor, StkErrors* const err)
                 break;
 
             case DUMP:
-                print_stk_elements(stk);
+                //print_stk_elements(stk);    сделать другой дамп
                 break;
 
             case OUT:
@@ -76,7 +77,7 @@ void run_prog (Stack* const stk, Proc* const processor, StkErrors* const err)
             
             case JA:
                 ip++;
-                proseccor->ip = ip;
+                processor->ip = ip;
                 ja(processor, stk);
                 break;
 
@@ -85,18 +86,18 @@ void run_prog (Stack* const stk, Proc* const processor, StkErrors* const err)
                 jae(processor, stk);
                 break;
 
-            case JAE:
+            case JE:
                 ip++;
                 je(processor, stk);
                 break;
 
-            case JAE:
+            case JNE:
                 ip++;
                 jne(processor, stk);
                 break;
 
             case POP:
-                stk_pop (stk, elem, err);
+                stk_pop (stk, &elem, err);
                 break;
 
             case POPR:
@@ -108,7 +109,7 @@ void run_prog (Stack* const stk, Proc* const processor, StkErrors* const err)
             case PUSHR:
                 ip++;
                 stk_pop(stk, &arg, err);
-                pushr(stk, processor, arg,j err);
+                pushr(stk, processor, arg, err);
                 break;
 
             case HLT:
@@ -128,6 +129,7 @@ void ja(Proc* const processor, Stack* const stk, StkErrors* const err)  //не �
     assert(processor != nullptr);
     assert(err != nullptr);
 
+    size_t ip = 0;
     ip = processor->ip;
     stack_element_t first_el = 0;
     stack_element_t sec_el = 0;
@@ -150,6 +152,7 @@ void jae (Proc* const processor, Stack* const stk, StkErrors* const err)
     assert(processor != nullptr);
     assert(err != nullptr);
 
+    size_t ip = 0;
     ip = processor->ip;
     stack_element_t first_el = 0;
     stack_element_t sec_el = 0;
@@ -172,6 +175,7 @@ void je (Proc* const processor, Stack* const stk, StkErrors* const err)
     assert(processor != nullptr);
     assert(err != nullptr);
 
+    size_t ip = 0;
     ip = processor->ip;
     stack_element_t first_el = 0;
     stack_element_t sec_el = 0;
@@ -194,6 +198,7 @@ void jne (Proc* const processor, Stack* const stk, StkErrors* const err)
     assert(processor != nullptr);
     assert(err != nullptr);
 
+    size_t ip = 0;
     ip = processor->ip;
     stack_element_t first_el = 0;
     stack_element_t sec_el = 0;
@@ -210,18 +215,18 @@ void jne (Proc* const processor, Stack* const stk, StkErrors* const err)
     processor->ip = ip;
 }
 
-void popr(Proc* const processor, Stack* const stk, size_t reg_ind, StkErrors* const err)
+void popr(Stack* const stk, Proc* const processor, size_t reg_ind, StkErrors* const err)
 {
     assert(stk != nullptr);
     assert(processor != nullptr);
     assert(err != nullptr);
 
     int elem = 0;
-    stk_pop(stk, elem, err);
+    stk_pop(stk, &elem, err);
     processor->registers[reg_ind] = elem;
 }
 
-void pushr (Proc* const processor, Stack* const stk, size_t reg_ind, StkErrors* const err)
+void pushr (Stack* const stk, Proc* const processor, size_t reg_ind, StkErrors* const err)
 {
     assert(stk != nullptr);
     assert(processor != nullptr);

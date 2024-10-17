@@ -5,19 +5,21 @@
 
 static const size_t commands_amount = 18;
 
-void file_transformation(const char* const name, Proc* const processor)
+StkErrors file_transformation(const char* const name, Proc* const processor, StkErrors* err)
 {
     assert(name != nullptr);
     assert(processor != nullptr);
 
-    make_init_buf (name, processor);
+    make_init_buf (name, processor, err);
     
-    processing_text(processor);  //можно подключить файл из онегина, но там эта функция обрабатывает несколько массивов сразу. можно ее переделать и подключить
+    processing_text(processor, err);  
 
-    output_file (processor);
+    output_file (processor, err);
+
+    return ALL_RIGHT;
 }
 
-void make_init_buf (const char* const  name, Proc* const processor)
+StkErrors make_init_buf (const char* const  name, Proc* const processor, StkErrors* err)
 {
     assert(name != nullptr);
     assert(processor != nullptr);
@@ -47,9 +49,11 @@ void make_init_buf (const char* const  name, Proc* const processor)
 
     processor->file_buf = file_buf;
     processor->init_file_size = init_file_size;
+
+    return ALL_RIGHT;
 }
 
-void processing_text(Proc* const processor)
+StkErrors processing_text(Proc* const processor, StkErrors* err)
 {
     assert(processor != nullptr);
 
@@ -85,9 +89,11 @@ void processing_text(Proc* const processor)
     }
     space_cnt = space_cnt + str_cnt;
     processor->input_file_commands_amount = space_cnt;
+
+    return ALL_RIGHT;
 }
 
-void output_file(Proc* const processor)
+StkErrors output_file(Proc* const processor, StkErrors* err)
 {
     assert(processor != nullptr);
 
@@ -102,7 +108,7 @@ void output_file(Proc* const processor)
         return NO_PLACE;
     }
 
-    cool_compile(processor, new_file_buf);
+    cool_compile(processor, new_file_buf, err);
 
     FILE* output_file;
     output_file = fopen("out.txt", "w");
@@ -117,16 +123,18 @@ void output_file(Proc* const processor)
     fclose(output_file);
 
     processor->new_file_buf = new_file_buf;
+
+    return ALL_RIGHT;
 }
 
-void cool_compile(int* const new_file_buf, Proc* const processor)
+StkErrors cool_compile(int* const new_file_buf, Proc* const processor, StkErrors* err)
 {
     assert(new_file_buf != nullptr);
     assert(processor != nullptr);
 
     size_t input_file_commands_amount = processor->input_file_commands_amount;
     char* file_buf = processor->file_buf;
-    struct CommandParameters bunch_of_commands = processor->bunch_of_commands;
+    struct CommandParameters* bunch_of_commands = processor->bunch_of_commands;
 
     for (size_t i = 0; i < input_file_commands_amount; i++)
     {
@@ -135,9 +143,9 @@ void cool_compile(int* const new_file_buf, Proc* const processor)
         
         for (size_t com = 0; com < commands_amount; com++)
         {
-            if (strcmp(str, bunch_of_commands[com]->com_str) == 0)  //strcmp ну никак не избежать
+            if (strcmp(str, bunch_of_commands[com].com_str) == 0)  //strcmp ну никак не избежать
             {
-                new_file_buf[i] = bunch_of_commands[com]->com_num;  //заполнил макросом, все круто
+                new_file_buf[i] = bunch_of_commands[com].com_num;  //заполнил макросом, все круто
 
                 if (com == 1)  //перечислить все функции, требующие доп агрумента
                 {
@@ -149,4 +157,7 @@ void cool_compile(int* const new_file_buf, Proc* const processor)
             }
         }
     }
+
+    return ALL_RIGHT;
 }
+
