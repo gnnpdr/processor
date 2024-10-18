@@ -11,8 +11,15 @@ int main (int argc, char** argv)
 {
     StkErrors err = ALL_RIGHT;
     Proc processor = {};
+
+    int labels[LABELS_AMT];
     
-    char* name = (char*)calloc(strlen(argv[1]) + 1, sizeof(char));  //серьезно надо сделать такую функцию?
+    for (size_t i = 0; i < LABELS_AMT; i++)
+        labels[i] = -1;
+
+    processor.labels = labels;
+
+    char* name = (char*)calloc(strlen(argv[1]) + 1, sizeof(char));
     if (name == nullptr)
     {
         printf("no place\n");
@@ -26,5 +33,9 @@ int main (int argc, char** argv)
     Stack stk = {};
 
     run_prog(&stk, &processor, &err);
+
+    free(name);
+    free_bufs(&processor);
+
 }
 

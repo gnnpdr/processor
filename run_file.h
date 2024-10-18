@@ -3,11 +3,15 @@
 
 #include "stack_operations.h"
 
-void run_prog (Stack* stk, Proc* processor, StkErrors* err);
+void run_prog (Stack* const stk, Proc* const processor, StkErrors* const err);
 
-void ja(Proc* processor, Stack* stk);
-void jae(Proc* processor, Stack* stk);
-void je(Proc* processor, Stack* stk);
-void jne(Proc* processor, Stack* stk);
+void ja(Proc* const processor, Stack* const stk, StkErrors* const err);
+void jae (Proc* const processor, Stack* const stk, StkErrors* const err);
+void je (Proc* const processor, Stack* const stk, StkErrors* const err);
+void jne (Proc* const processor, Stack* const stk, StkErrors* const err);
+
+void popr(Stack* const stk, Proc* const processor, size_t reg_ind, StkErrors* const err);
+void pushr (Stack* const stk, Proc* const processor, size_t reg_ind, StkErrors* const err);
+
 
 #endif //_RUN_H_

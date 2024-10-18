@@ -15,7 +15,7 @@ void run_prog (Stack* const stk, Proc* const processor, StkErrors* const err)
     int first_el = 0;
     int sec_el = 0;
     int arg = 0;
-    int amount = processor->input_file_commands_amount;
+    size_t amount = processor->input_file_commands_amount;
 
     while(ip < amount)
     {
@@ -78,22 +78,22 @@ void run_prog (Stack* const stk, Proc* const processor, StkErrors* const err)
             case JA:
                 ip++;
                 processor->ip = ip;
-                ja(processor, stk);
+                ja(processor, stk, err);
                 break;
 
             case JAE:
                 ip++;
-                jae(processor, stk);
+                jae(processor, stk, err);
                 break;
 
             case JE:
                 ip++;
-                je(processor, stk);
+                je(processor, stk, err);
                 break;
 
             case JNE:
                 ip++;
-                jne(processor, stk);
+                jne(processor, stk, err);
                 break;
 
             case POP:

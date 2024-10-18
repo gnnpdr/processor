@@ -30,7 +30,7 @@ StkErrors check(Stack* stk)
     assert(stk != nullptr);
     assert(stk->data != nullptr);
 
-    size_t size = stk->size;
+    //size_t size = stk->size;
     size_t capacity = stk->capacity;
     stack_element_t* data = stk->data;
 

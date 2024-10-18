@@ -3,6 +3,10 @@
 
 #include "stack.h"
 
+static const size_t CMD_AMT = 18;
+static const size_t MAX_INPUT_CMD_AMT = 60;
+static const size_t LABELS_AMT = 10;
+
 enum CommandsNums
 {
     PUSH  = 1 ,
@@ -32,6 +36,12 @@ struct CommandParameters
     size_t arg_amt;
 };
 
+struct LabelParameters
+{
+    size_t j_pointer;
+    char* label_word;
+};
+
 const struct CommandParameters PushStr  =  {.com_str = "push" , .com_num = PUSH , .arg_amt = 1};
 const struct CommandParameters AddStr   =  {.com_str = "add"  , .com_num = ADD  , .arg_amt = 0};
 const struct CommandParameters SubStr   =  {.com_str = "sub"  , .com_num = SUB  , .arg_amt = 0};
@@ -51,24 +61,23 @@ const struct CommandParameters PopStr   =  {.com_str = "pop"  , .com_num = POP  
 const struct CommandParameters PushrStr =  {.com_str = "pushr", .com_num = PUSHR, .arg_amt = 0};
 const struct CommandParameters PoprStr  =  {.com_str = "popr" , .com_num = POPR , .arg_amt = 0};
 
-struct CommandParameters  bunch_of_commands [CMD_AMT]  =    {PushrStr,
-                                                            AddStr,
-                                                            SubStr,
-                                                            MulStr,
-                                                            DivStr,
-                                                            SqrtStr,
-                                                            SinStr,
-                                                            CosStr,
-                                                            DumpStr,
-                                                            HltStr,
-                                                            OutStr,
-                                                            JaStr,
-                                                            JaeStr,
-                                                            JeStr,
-                                                            PopStr,
+static const struct CommandParameters bunch_of_commands [CMD_AMT]  =    {PushrStr,
+                                                            AddStr  ,
+                                                            SubStr  ,
+                                                            MulStr  ,
+                                                            DivStr  ,
+                                                            SqrtStr ,
+                                                            SinStr  ,
+                                                            CosStr  ,
+                                                            DumpStr ,
+                                                            HltStr  ,
+                                                            OutStr  ,
+                                                            JaStr   ,
+                                                            JaeStr  ,
+                                                            JeStr   ,
+                                                            PopStr  ,
                                                             PushrStr,
                                                             PoprStr };
-static const size_t CMD_AMT = 18;
 
 struct Proc
 {
@@ -78,13 +87,42 @@ struct Proc
     size_t init_file_size;
     
     int* registers;
+
     size_t ip;
+    size_t* symb_amount_arr;
+    LabelParameters* labels;
+
 };
+
+enum LabelType
+{
+    START,
+    ARG
+};
+
+enum LabelRes
+{
+    LABEL,
+    NOT_LABEL,
+    PLACE_PROBLEM,
+    SYN_PROBLEM
+};
+
+#define SSCANF(file_buf, ...)   do                                                   \
+                                {                                                    \
+                                    sscanf (file_buf, __VA_ARGS__);                  \
+                                    word_num++;                                      \
+                                    file_buf = file_buf + symb_amount_arr[word_num]; \
+                                }while(0);
+
+
 
 StkErrors file_transformation(const char* const name, Proc* const processor, StkErrors* err);
 StkErrors make_init_buf (const char* const  name, Proc* const processor, StkErrors* err);
-StkErrors processing_text(Proc* const processor, StkErrors* err);
+StkErrors processing_text(Proc* processor, StkErrors* err);
 StkErrors output_file(Proc* const processor, StkErrors* err);
-StkErrors cool_compile(Proc* const  processor, int* const new_file_buf, StkErrors* err);
+StkErrors compile(Proc* const  processor, int* const new_file_buf, StkErrors* err);
+LabelRes check_label(Proc* processor, char* file_buf, size_t* word_num, LabelType label_place, LabelRes* is_label, int* arg);
+void free_bufs (Proc* processor);
 
 #endif //_COMPILE_H_
