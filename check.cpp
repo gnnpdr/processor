@@ -28,11 +28,11 @@ void dump(Stack* stk, const char* file, const char* func, const int code_str)
 StkErrors check(Stack* stk)
 {
     assert(stk != nullptr);
-    assert(stk->data != nullptr);
+    //assert(stk->data != nullptr);
 
     //size_t size = stk->size;
     size_t capacity = stk->capacity;
-    stack_element_t* data = stk->data;
+    //stack_element_t* data = stk->data;
 
     if (stk == nullptr)
     {
@@ -47,11 +47,11 @@ StkErrors check(Stack* stk)
     }
         
 
-    if(data[capacity LEFT_CANARY_ADD] != right_canary_value)
-    {
-        printf("problem in right canary\n");
-        return PROBLEM;
-    }
+    //if(data[capacity LEFT_CANARY_ADD] != right_canary_value)
+    //{
+    //    printf("problem in right canary\n");
+    //    return PROBLEM;
+    //}
 
     if (stk->hash != stk_hash(stk))
     {

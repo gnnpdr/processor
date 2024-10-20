@@ -12,10 +12,10 @@ int main (int argc, char** argv)
     StkErrors err = ALL_RIGHT;
     Proc processor = {};
 
-    int labels[LABELS_AMT];
+    LabelParameters labels[LABELS_AMT];
     
     for (size_t i = 0; i < LABELS_AMT; i++)
-        labels[i] = -1;
+        labels[i].j_pointer = -1;
 
     processor.labels = labels;
 
@@ -30,9 +30,9 @@ int main (int argc, char** argv)
 
     file_transformation(name, &processor, &err);
 
-    Stack stk = {};
+    //Stack stk = {};
 
-    run_prog(&stk, &processor, &err);
+    //run_prog(&stk, &processor, &err);
 
     free(name);
     free_bufs(&processor);

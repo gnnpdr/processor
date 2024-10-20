@@ -73,8 +73,6 @@ void dump(Stack* stk, const char* file, const char* func, const int code_str);
 void print_stk_elements(stack_element_t* data, size_t capacity, size_t size);
 StkErrors check(Stack* stk);
 
-void stack_assert_func(Stack* stk, const char* file, const char* func, const int code_str);
-
 unsigned long long stk_hash(Stack* stk);
 
 #endif //_CHECK_H_
