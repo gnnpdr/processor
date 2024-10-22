@@ -12,14 +12,10 @@ int main (int argc, char** argv)
 {
     Errors err = ALL_RIGHT;
     Proc processor = {};
+    make_regs(&processor);
 
     char* name = (char*)calloc(strlen(argv[1]) + 1, sizeof(char));
-    if (name == nullptr)
-    {
-        printf("no place\n");
-        return LOCATION_ERROR;
-    }
-
+    CAPACITY_CHECK(name)
     strcpy(name, argv[1]);
 
     proc (name, &processor, &err);

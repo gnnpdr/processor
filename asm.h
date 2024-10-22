@@ -3,9 +3,10 @@
 
 #include "check_proc.h"
 
-static const size_t CMD_AMT           = 18;
+static const size_t CMD_AMT           = 15;
 static const size_t MAX_INPUT_CMD_AMT = 60;
 static const size_t LABELS_AMT        = 10;
+static const size_t REG_AMT           =  5;
 
 enum CommandsNums
 {
@@ -20,13 +21,10 @@ enum CommandsNums
     DUMP  = 9 ,
     OUT   = 10,
     HLT   = 11,
-    JA    = 12,
-    JAE   = 13,
-    JE    = 14,
-    JNE   = 15,
-    POP   = 16,
-    POPR  = 17,
-    PUSHR = 18
+    JUMP  = 12,
+    POP   = 13,
+    POPR  = 14,
+    PUSHR = 15
 };
 
 struct CommandParameters 
@@ -48,13 +46,10 @@ const struct CommandParameters CosStr   =  {.cmd_str = "cos"  , .cmd_num = COS  
 const struct CommandParameters DumpStr  =  {.cmd_str = "dump" , .cmd_num = DUMP , .arg_amt = 0};
 const struct CommandParameters HltStr   =  {.cmd_str = "hlt"  , .cmd_num = HLT  , .arg_amt = 0};
 const struct CommandParameters OutStr   =  {.cmd_str = "out"  , .cmd_num = OUT  , .arg_amt = 1};
-const struct CommandParameters JaStr    =  {.cmd_str = "ja"   , .cmd_num = JA   , .arg_amt = 2};
-const struct CommandParameters JaeStr   =  {.cmd_str = "jae"  , .cmd_num = JAE  , .arg_amt = 2};
-const struct CommandParameters JeStr    =  {.cmd_str = "je"   , .cmd_num = JE   , .arg_amt = 2};
-const struct CommandParameters JneStr   =  {.cmd_str = "jne"  , .cmd_num = JNE  , .arg_amt = 2};
+const struct CommandParameters JumpStr  =  {.cmd_str = "jump" , .cmd_num = JUMP , .arg_amt = 2};
 const struct CommandParameters PopStr   =  {.cmd_str = "pop"  , .cmd_num = POP  , .arg_amt = 1};
-const struct CommandParameters PushrStr =  {.cmd_str = "pushr", .cmd_num = PUSHR, .arg_amt = 0};
-const struct CommandParameters PoprStr  =  {.cmd_str = "popr" , .cmd_num = POPR , .arg_amt = 0};
+const struct CommandParameters PushrStr =  {.cmd_str = "pushr", .cmd_num = PUSHR, .arg_amt = 1};
+const struct CommandParameters PoprStr  =  {.cmd_str = "popr" , .cmd_num = POPR , .arg_amt = 1};
 
 static const struct CommandParameters bunch_of_commands [CMD_AMT]  =    {PushStr,
                                                                         AddStr   ,
@@ -67,20 +62,22 @@ static const struct CommandParameters bunch_of_commands [CMD_AMT]  =    {PushStr
                                                                         DumpStr  ,
                                                                         HltStr   ,
                                                                         OutStr   ,
-                                                                        JaStr    ,
-                                                                        JaeStr   ,
-                                                                        JeStr    ,
+                                                                        JumpStr  ,
                                                                         PopStr   ,
                                                                         PushrStr ,
                                                                         PoprStr };
 
+struct RegisterParameters
+{
+    int value;
+    int name;
+};
 
 enum LabelType
 {
     DEFINE,
     ARG
 };
-
 
 struct LabelParameters
 {
@@ -102,17 +99,13 @@ struct Proc
     size_t input_file_commands_amount;
     size_t init_file_size;
     
-    int* registers;
+    struct RegisterParameters* registers;
 
     size_t ip;
     size_t* symb_amount_arr;
     char** addresses;
     struct Labels labels;
 };
-
-
-
-
 
 
 #define FILE_CHECK(file)    do                                      \
@@ -158,5 +151,7 @@ Errors check_label(Proc* processor, char* str, size_t cmd_num, int* arg);
 bool find_label_mark (const char* const str);
 
 void proc_dtor (Proc* processor);
+
+void print_labels (LabelParameters* labels);
 
 #endif //_COMPILE_H_

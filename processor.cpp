@@ -76,41 +76,26 @@ void run_prog (Stack* const stk, Proc* const processor, Errors* const err)
                 printf("%d\n", stk->data[0]);
                 break; 
             
-            case JA:
-                ip++;
+            case JUMP:
                 processor->ip = ip;
-                ja(processor, stk, err);
-                break;
-
-            case JAE:
-                ip++;
-                jae(processor, stk, err);
-                break;
-
-            case JE:
-                ip++;
-                je(processor, stk, err);
-                break;
-
-            case JNE:
-                ip++;
-                jne(processor, stk, err);
+                jump(processor, stk, err);
+                ip = processor->ip;
                 break;
 
             case POP:
                 stk_pop (stk, &elem, err);
                 break;
 
-            case POPR:
-                ip++;
-                stk_pop(stk, &arg, err);
-                popr(stk, processor, arg, err);
+            case POPR:   //забирает из стэка и пушит в регистр
+                processor->ip = ip;
+                popr(stk, processor, err);
+                ip = processor->ip;
                 break;
 
-            case PUSHR:
-                ip++;
-                stk_pop(stk, &arg, err);
-                pushr(stk, processor, arg, err);
+            case PUSHR:   //забирает из регистра и пушит в стэк
+                processor->ip = ip;
+                pushr(stk, processor, err);
+                ip = processor->ip;
                 break;
 
             case HLT:
@@ -124,76 +109,101 @@ void run_prog (Stack* const stk, Proc* const processor, Errors* const err)
     }
 }
 
-void ja(Proc* const processor, Stack* const stk, Errors* const err)  //не уверена, настолько ли важно хранить айпи в стэке, а не как просто переностимую переменную
+ResultOfComparing comparing(int first_el, int sec_el)
 {
-    JUMP_INFO
+    if (first_el > sec_el)
+        return GREATER;
 
-    if(first_el > sec_el)
-    {
-        ip = processor->new_file_buf[ip];
-        processor->registers[0]++;
-    }
+    else if (first_el == sec_el)
+        return EQUAL;
 
-    processor->ip = ip;
+    else 
+        return LESS;
 }
 
-void jae (Proc* const processor, Stack* const stk, Errors* const err)
+void jump (Proc* const processor, Stack* const stk, Errors* const err)
 {
     JUMP_INFO
+    ip++;
+    int expected_res = program[ip];
+    ResultOfComparing comp_res = comparing(first_el, sec_el);
 
-    if(first_el >= sec_el)
+    switch (expected_res)
     {
-        ip = processor->new_file_buf[ip];
-        processor->registers[0]++;
-    }
+        case(GREATER):
+            if (comp_res == GREATER)
+                JUMP_FUNC
 
-    processor->ip = ip;
+        case(GREATER_AND_EQUAL):
+            if (comp_res == GREATER || comp_res == EQUAL)
+                JUMP_FUNC
+
+        case(LESS):
+            if (comp_res == LESS)
+                JUMP_FUNC
+
+        case(LESS_AND_EQUAL):
+            if (comp_res == LESS || comp_res == EQUAL)
+                JUMP_FUNC
+
+        case(EQUAL):
+            if (comp_res == EQUAL)
+                JUMP_FUNC
+
+        case(NOT_EQUAL):
+            if (comp_res != EQUAL)
+                JUMP_FUNC
+    }
 }
 
-void je (Proc* const processor, Stack* const stk, Errors* const err)
+void make_regs(Proc* processor)
 {
-    JUMP_INFO
+    assert(processor != nullptr);
 
-    if(first_el == sec_el)
+    RegisterParameters reg[REG_AMT];
+
+    for (size_t i = 0; i < REG_AMT; i++)
     {
-        ip = processor->new_file_buf[ip];
-        processor->registers[0]++;
+        reg[i].name = i + 1;
+        reg[i].value = -1;
     }
-
-    processor->ip = ip;
+        
+    processor->registers = reg;
 }
 
-void jne (Proc* const processor, Stack* const stk, Errors* const err)
-{
-    JUMP_INFO
-
-    if(first_el != sec_el)
-    {
-        ip = processor->new_file_buf[ip];
-        processor->registers[0]++;
-    }
-
-    processor->ip = ip;
-}
-
-void popr(Stack* const stk, Proc* const processor, size_t reg_ind, Errors* const err)
+void popr(Stack* const stk, Proc* const processor, Errors* const err)
 {
     assert(stk != nullptr);
     assert(processor != nullptr);
     assert(err != nullptr);
+
 
     int elem = 0;
     stk_pop(stk, &elem, err);
-    processor->registers[reg_ind] = elem;
+    
+    size_t ip = processor->ip;
+    ip++;
+    int* program = processor->new_file_buf;
+    int reg_ind = program[ip];
+
+    processor->registers[reg_ind].value = elem;
+    processor->ip = ip;
 }
 
-void pushr (Stack* const stk, Proc* const processor, size_t reg_ind, Errors* const err)
+void pushr (Stack* const stk, Proc* const processor, Errors* const err)
 {
+
     assert(stk != nullptr);
     assert(processor != nullptr);
     assert(err != nullptr);
 
-    int elem = 0;
-    elem = processor->registers[reg_ind];
+    size_t ip = processor->ip;
+    ip++;
+    int* program = processor->new_file_buf;
+    int reg_ind = program[ip];
+
+    int elem = processor->registers[reg_ind].value;
+
     stk_push(stk, elem, err);
+    processor->ip = ip;
 }

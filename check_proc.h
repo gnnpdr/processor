@@ -11,4 +11,6 @@ void print_output_buf (int* file_buf, size_t size, size_t cmd_num, char* str);
 
 void print_scanf_res (char* file_buf, char* str);
 
+
+
 #endif //_DUMP_H_
