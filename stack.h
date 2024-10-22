@@ -9,7 +9,7 @@ static const int stk_amount = 4;
 static const int delta = 2;
 static const int double_delta = 4;
 
-StkErrors stk_ctor(Stack* stk, const char* file, const char* func, const int code_str, StkErrors* err);
+Errors stk_ctor(Stack* stk, const char* file, const char* func, const int code_str, Errors* err);
 
 void stk_dtor(Stack* stk);
 

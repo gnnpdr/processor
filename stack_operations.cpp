@@ -2,7 +2,7 @@
 
 #include "stack_operations.h"
 
-StkErrors stk_push(Stack* stk, stack_element_t element, StkErrors* err)
+Errors stk_push(Stack* stk, stack_element_t element, Errors* err)
 {
     CHECK_STK(stk, err)
 
@@ -29,7 +29,7 @@ StkErrors stk_push(Stack* stk, stack_element_t element, StkErrors* err)
     return ALL_RIGHT;
 }
 
-StkErrors change_capacity(Stack* stk, size_t new_capacity, size_t capacity, StkErrors* err)
+Errors change_capacity(Stack* stk, size_t new_capacity, size_t capacity, Errors* err)
 {
     CHECK_STK(stk, err)
 
@@ -62,7 +62,7 @@ StkErrors change_capacity(Stack* stk, size_t new_capacity, size_t capacity, StkE
     return ALL_RIGHT;
 }
 
-StkErrors stk_pop(Stack* stk, stack_element_t* elem, StkErrors* err)
+Errors stk_pop(Stack* stk, stack_element_t* elem, Errors* err)
 {
     CHECK_STK(stk, err)
 

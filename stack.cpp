@@ -2,7 +2,7 @@
 
 #include "stack.h"
 
-StkErrors stk_ctor(Stack* stk, const char* file, const char* func, const int code_str, StkErrors* err)
+Errors stk_ctor(Stack* stk, const char* file, const char* func, const int code_str, Errors* err)
 {
     #ifdef DEBUG
     stk->origin_file = file;

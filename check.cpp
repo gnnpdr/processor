@@ -25,7 +25,7 @@ void dump(Stack* stk, const char* file, const char* func, const int code_str)
 }
 
 
-StkErrors check(Stack* stk)
+Errors check(Stack* stk)
 {
     assert(stk != nullptr);
     //assert(stk->data != nullptr);
@@ -84,6 +84,8 @@ unsigned long long stk_hash(Stack* stk)
 
 void print_stk_elements(stack_element_t* data, size_t capacity, size_t size)
 {
+    assert (data != nullptr);
+    
     for (size_t i = LEFT_CANARY_ADD; i < capacity; i++)
     {
         if(i < size)

@@ -27,16 +27,19 @@ struct Stack
     size_t capacity;
 };
 
-enum StkErrors
+enum Errors
 {
     ALL_RIGHT,
     NO_PLACE,
+    LOCATION_ERROR,
     PROBLEM,
     BUFFER_OVERFLOW,
     HASH_PROBLEM,
     VALUE_PROBLEM,
     UNKNOWN,
-    FILE_PROBLEM
+    FILE_PROBLEM,
+    PLACE_PROBLEM,
+    SYN_PROBLEM
 };
 
 #ifdef DEBUG
@@ -71,7 +74,7 @@ enum StkErrors
 
 void dump(Stack* stk, const char* file, const char* func, const int code_str);
 void print_stk_elements(stack_element_t* data, size_t capacity, size_t size);
-StkErrors check(Stack* stk);
+Errors check(Stack* stk);
 
 unsigned long long stk_hash(Stack* stk);
 

@@ -1,5 +1,5 @@
 
-#include "assemb.h"
+#include "asm.h"
 
 
 #ifndef _PUSH_H_
@@ -7,9 +7,9 @@
 
 #include "stack.h"
 
-StkErrors stk_push(Stack* stk, stack_element_t element, StkErrors* err);
+Errors stk_push(Stack* stk, stack_element_t element, Errors* err);
 
-StkErrors stk_pop(Stack* stk, stack_element_t* elem, StkErrors* err);
-StkErrors change_capacity(Stack* stk, size_t new_capacity, size_t capacity, StkErrors* err);
+Errors stk_pop(Stack* stk, stack_element_t* elem, Errors* err);
+Errors change_capacity(Stack* stk, size_t new_capacity, size_t capacity, Errors* err);
 
 #endif //_PUSH_H_
