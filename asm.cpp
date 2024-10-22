@@ -183,7 +183,6 @@ Errors assemb (Proc* const processor, Errors* err)
             new_buf = (int*)realloc(new_buf, (input_file_commands_amount - 1)*sizeof(int));
             CAPACITY_CHECK(new_buf)
             
-            cmd_num--;
             continue;
         }
             
@@ -240,34 +239,35 @@ void make_labels(Proc* processor)
 
     LabelParameters label[LABELS_AMT];
 
-    /*for (size_t i = 0; i < LABELS_AMT; i++)
+    for (size_t i = 0; i < LABELS_AMT; i++)
     {
-        printf("i in make labels %d\n", i);
+        //printf("i in make labels %d\n", i);
 
         label[i].target = -1;
-        printf("after value %d\n", label[i].target);
-    }*/
-        
+        //
+    }
 
-    processor->labels.labels = label;
     for (int i = 0; i < LABELS_AMT; i++)
     {
-        printf("after init\n");
-        printf("after value %d\n", processor->labels.labels[i].target);
+        printf("value %d\n", label[i].target);
+        processor->labels.labels[i].target = label[i].target;
     }
+
+    printf("in make labels\n");
+    print_labels (processor->labels.labels);
 }
 
 Errors check_label(Proc* processor, char* str, size_t cmd_num, int* arg)
 { 
     bool is_label = false;
-    //printf("before is label %d\n", is_label);
 
-    LabelParameters* labels = processor->labels.labels;
-
-    printf("str in check label %s\n", str);
+    LabelParameters* label = processor->labels.labels;
+    
     is_label = find_label_mark(str);
-    printf("after is label %d\n", is_label);
-    print_labels (labels);
+    
+    //printf("in check labels\n");
+    //print_labels (label);
+    //printf("go in\n");
 
     if (is_label == true)
     {
@@ -275,24 +275,24 @@ Errors check_label(Proc* processor, char* str, size_t cmd_num, int* arg)
         {
             for (size_t i = 0; i < LABELS_AMT; i++)
             {
-                if (labels[i].target == -1 && labels[i].name == nullptr)
+                if (label[i].target == -1 && label[i].name == nullptr)
                 {
-                    labels[i].target = cmd_num;
-                    labels[i].name = str;
-                    break;
+                    label[i].target = cmd_num;
+                    label[i].name = str;
                 }
 
-                else if (labels[i].target == -1 && strcmp(labels[i].name, str) == 0)
+                else if (label[i].target == -1 && strcmp(label[i].name, str) == 0)
                 {
-                    labels[i].target = cmd_num;
-                    break;
+                    label[i].target = cmd_num;
                 }
 
-                if (i >= LABELS_AMT - 1 && labels[i].target != -1)
+                if (i >= LABELS_AMT - 1 && label[i].target != -1)
                 {
                     printf ("no place for new label\n");
                     return PLACE_PROBLEM;
                 }
+                
+                break;
             }
         }
 
@@ -300,29 +300,33 @@ Errors check_label(Proc* processor, char* str, size_t cmd_num, int* arg)
         {
             for (size_t i = 0; i < LABELS_AMT; i++)
             {
-                if (labels[i].target != -1 && strcmp(labels[i].name, str) == 0)
+                if (label[i].target != -1 && strcmp(label[i].name, str) == 0)
                 {
-                    *arg = labels[i].target;
-                    break;
+                    *arg = label[i].target;
                 }
                     
                 
-                else if (labels[i].target == -1 && strcmp(labels[i].name, str) == 0)
+                else if (label[i].target == -1 && strcmp(label[i].name, str) == 0)
                 {
-                    labels[i].target = cmd_num;
-                    *arg = labels[i].target;
-                    break;
+                    label[i].target = cmd_num;
+                    *arg = label[i].target;
                 }
 
-                if (i >= LABELS_AMT - 1 && labels[i].name != nullptr)
+                if (i >= LABELS_AMT - 1 && label[i].name != nullptr)
                 {
                     printf("there is no such label\n");
                     return SYN_PROBLEM;
                 }
+
+                break;
             }
         }
 
-        processor->labels.labels = labels;
+        for (int i = 0; i < LABELS_AMT; i++)
+        {
+            processor->labels.labels[i].target = label[i].target;
+        }
+
         processor->labels.is_label = true;
     }
 
@@ -366,6 +370,6 @@ void print_labels (LabelParameters* labels)
     for (size_t i = 0; i < LABELS_AMT; i++)
     {
         printf("target %d: %d\n", i, labels[i].target);
-        printf("name %d: %s\n", i, labels[i].name);
+        //printf("name %d: %s\n", i, labels[i].name);
     }
 }

@@ -87,7 +87,7 @@ struct LabelParameters
 
 struct Labels
 {
-    LabelParameters* labels;
+    LabelParameters labels[LABELS_AMT];
     LabelType label_type;
     bool is_label;
 };
