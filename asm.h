@@ -3,6 +3,8 @@
 
 #include "check_proc.h"
 
+
+static const size_t RAM_AMT           = 25;
 static const size_t CMD_AMT           = 15;
 static const size_t MAX_INPUT_CMD_AMT = 60;
 static const size_t LABELS_AMT        = 10;
@@ -35,7 +37,7 @@ struct CommandParameters
 };
 
 
-const struct CommandParameters PushStr  =  {.cmd_str = "push" , .cmd_num = PUSH , .arg_amt = 1};
+const struct CommandParameters PushStr  =  {.cmd_str = "push" , .cmd_num = PUSH , .arg_amt = 3};  //максимальное значение количества агрументов
 const struct CommandParameters AddStr   =  {.cmd_str = "add"  , .cmd_num = ADD  , .arg_amt = 0};
 const struct CommandParameters SubStr   =  {.cmd_str = "sub"  , .cmd_num = SUB  , .arg_amt = 0};
 const struct CommandParameters MulStr   =  {.cmd_str = "mul"  , .cmd_num = MUL  , .arg_amt = 0};
@@ -70,7 +72,7 @@ static const struct CommandParameters bunch_of_commands [CMD_AMT]  =    {PushStr
 struct RegisterParameters
 {
     int value;
-    int name;
+    char* name;
 };
 
 enum LabelType
@@ -90,6 +92,7 @@ struct Labels
     LabelParameters labels[LABELS_AMT];
     LabelType label_type;
     bool is_label;
+    size_t label_delta;
 };
 
 struct Proc
@@ -105,6 +108,9 @@ struct Proc
     size_t* symb_amount_arr;
     char** addresses;
     struct Labels labels;
+
+    char RAM[RAM_AMT];
+    size_t skip_arg;
 };
 
 
@@ -130,10 +136,11 @@ struct Proc
 
 #define SSCANF(file_buf, ...)   do                                                   \
                                 {                                                    \
+                                    *(cmd_num)++;                                    \
+                                    file_buf = processor->addresses[*cmd_num];       \
                                     sscanf (file_buf, __VA_ARGS__);                  \
-                                    cmd_num++;                                       \
-                                    file_buf = processor->addresses[cmd_num];        \
                                 }while(0);
+
 
 Errors proc (const char* const name, Proc* const processor, Errors* err);
 
@@ -143,15 +150,22 @@ size_t find_file_size (const char* const name);
 void processing_text (Proc* const processor);
 Errors filling_addresses(Proc* processor);
 
-Errors output_file(Proc* const processor, Errors* err);
-Errors assemb (Proc* const processor, Errors* err);
+Errors output_file(Proc* processor, Errors* err);
+Errors assembly (Proc* const processor, Errors* err);
+
+void arg_analysis (Proc* processor, int* arg1, int* arg2, size_t* arg_value, size_t* cmd_num);
+void plus_case(Proc* processor, int* arg2, size_t* cmd_num, size_t* arg_value);
 
 void make_labels(Proc* processor);
+void make_regs(Proc* processor);
 Errors check_label(Proc* processor, char* str, size_t cmd_num, int* arg);
 bool find_label_mark (const char* const str);
 
 void proc_dtor (Proc* processor);
 
 void print_labels (LabelParameters* labels);
+
+void RAM_filling (Proc* processor);
+void draw_RAM (Proc* processor);
 
 #endif //_COMPILE_H_

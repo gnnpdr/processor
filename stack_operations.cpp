@@ -4,11 +4,12 @@
 
 Errors stk_push(Stack* stk, stack_element_t element, Errors* err)
 {
-    CHECK_STK(stk, err)
+    //CHECK_STK(stk, err)
 
     stack_element_t* data = stk->data;
     size_t           size      = stk->size;
     size_t           capacity  = stk->capacity;
+    //printf("not right\n data %p\n size %d\n capacity %d\n", data, size, capacity);
 
     if (size >= capacity)
     {
@@ -20,12 +21,13 @@ Errors stk_push(Stack* stk, stack_element_t element, Errors* err)
     data[size] = element;
     size++;
     stk->size = size;
+    //printf("its all right in stack\n");
     
     #ifdef DEBUG
     stk->hash = stk_hash(stk);
     #endif
 
-    CHECK_STK(stk, err)
+    //CHECK_STK(stk, err)
     return ALL_RIGHT;
 }
 
@@ -76,10 +78,13 @@ Errors stk_pop(Stack* stk, stack_element_t* elem, Errors* err)
         change_capacity(stk, new_capacity, capacity, err);
         RETURN(*err)
     }
-    
-    *elem = data[size];
+
+    //printf("in pop\n");
+    //print_stk_elements(stk->data, 6, 6);
+    //printf("sizeelem %d\n", data[size]);
 
     size--; 
+    *elem = data[size];
     data[size] = poison;
     
     stk->size = size;

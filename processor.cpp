@@ -8,27 +8,29 @@ void run_prog (Stack* const stk, Proc* const processor, Errors* const err)
     assert(processor != nullptr);
     assert(err != nullptr);
 
-    size_t ip = processor->ip;
+    size_t ip = 0;
     int* program = processor->new_file_buf;
+    size_t label_delta = processor->labels.label_delta;
 
     stack_element_t elem = 0;
     int first_el = 0;
     int sec_el = 0;
     int arg = 0;
-    size_t amount = processor->input_file_commands_amount;
+    size_t amount = processor->input_file_commands_amount - label_delta;
 
     while(ip < amount)
     {
+        print_stk_elements(stk->data, stk->capacity, stk->size);
         switch(program[ip])
         {
             case PUSH:
-                ip++;
-                stk_push (stk, program[ip], err);
+                stk_push (stk, get_arg(processor), err);
                 break;
 
             case ADD:
                 stk_pop(stk, &sec_el, err);
                 stk_pop(stk, &first_el, err);
+                printf("first %d sec %d, sum %d\n", first_el, sec_el, first_el + sec_el);
                 stk_push (stk, first_el + sec_el, err);
                 break;
 
@@ -156,19 +158,31 @@ void jump (Proc* const processor, Stack* const stk, Errors* const err)
     }
 }
 
-void make_regs(Proc* processor)
+
+
+
+int get_arg (Proc* processor)
 {
-    assert(processor != nullptr);
+    size_t ip = processor->ip;
+    int* program = processor->new_file_buf;
+    ip++;  //перемещение на тип аргумента
 
-    RegisterParameters reg[REG_AMT];
+    int result = 0;
+    int arg_type = program[ip++];
 
-    for (size_t i = 0; i < REG_AMT; i++)
-    {
-        reg[i].name = i + 1;
-        reg[i].value = -1;
-    }
-        
-    processor->registers = reg;
+    if (arg_type & INT)
+        result += program[ip++];
+    
+    if (arg_type & REG)
+        result += processor->registers[ip++].value;
+
+    if (arg_type & RAM)   //к определенной ячейке оперативной памяти, загружаемой как аргумент
+        result += processor->RAM[result];
+    
+    ip--;  //чтобы не проскочил след команду из-за прибавления ip в цикле
+    processor->ip = ip;
+
+    return result;
 }
 
 void popr(Stack* const stk, Proc* const processor, Errors* const err)

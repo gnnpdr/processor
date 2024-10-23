@@ -8,12 +8,15 @@ Errors proc (const char* const name, Proc* const processor, Errors* err)
     assert(name != nullptr);
     assert(processor != nullptr);
 
+    //printf("hello 1\n");
     init_buf(name, processor, err);
-    
+    //printf("hello 2\n");
     processing_text(processor);  
+    //printf("hello 3\n");
     filling_addresses(processor);
-
+    //printf("hello 4\n");
     output_file(processor, err);
+    //printf("hello 5\n");
 
     return ALL_RIGHT;
 }
@@ -36,8 +39,6 @@ Errors init_buf (const char* const  name, Proc* processor, Errors* err)
     CAPACITY_CHECK(file_buf)
 
     fclose(file);
-
-    //print_init_buf (file_buf, init_file_size);
 
     processor->file_buf = file_buf;
     processor->init_file_size = init_file_size;
@@ -119,84 +120,142 @@ Errors filling_addresses(Proc* processor)
             }
         symb_num++;
     }
-
-    //print_addresses (addresses, processor->input_file_commands_amount);
+    /*printf("in addresses\n");
+    for (int i = 0; i < processor->input_file_commands_amount; i++)
+    {
+        printf("%s\n", addresses[i]);
+    }*/
 
     processor->addresses = addresses;
 
     return ALL_RIGHT;
 }
 
-Errors output_file(Proc* const processor, Errors* err)
+Errors output_file(Proc* processor, Errors* err)
 {
     assert(processor != nullptr);
-
-    int* new_buf = processor->new_file_buf;
+    //printf("oh no 7\n");
+    size_t label_delta = processor->labels.label_delta;
+    //printf("oh no 8\n");
+    int* new_buf;
+    //printf("oh no 9\n");
     size_t input_file_commands_amount = processor->input_file_commands_amount;
-
+    //printf("oh no 10\n");
+    
     new_buf = (int*)calloc(input_file_commands_amount, sizeof(int));
     CAPACITY_CHECK(new_buf)
-
+    //printf("oh no 12\n");
     processor->new_file_buf = new_buf;
 
+    //printf("oh no 1\n");
     make_labels(processor);
-    assemb(processor, err);
-    //assemb(processor, err);  
-
+    make_regs(processor);
+    //printf("oh no 2\n");
+    assembly(processor, err);
+    //assembly(processor, err);  
+    //printf("oh no 3\n");
     new_buf = processor->new_file_buf;
 
     FILE* output_file;
     output_file = fopen("out.txt", "a");
     FILE_CHECK(output_file)
+    //printf("oh no 4\n");
 
-    for (size_t cmd_num = 0; cmd_num < input_file_commands_amount; cmd_num++)
+    for (size_t cmd_num = 0; cmd_num < input_file_commands_amount - label_delta; cmd_num++)
         fprintf(output_file, "%d ", new_buf[cmd_num]);
     
+    //printf("oh no 5\n");
     fclose(output_file);
 
     return ALL_RIGHT;
 }
 
-Errors assemb (Proc* const processor, Errors* err)
+void make_regs(Proc* processor)
+{
+    assert(processor != nullptr);
+
+    RegisterParameters reg[REG_AMT];
+    char* reg_names[REG_AMT] = {"ax", "bx", "cx", "dx", "ex"};
+
+    for (size_t i = 0; i < REG_AMT; i++)
+    {
+        reg[i].name = reg_names[i];
+        reg[i].value = -1;
+    }
+        
+    for (size_t i = 0; i < REG_AMT; i++)
+        processor->registers[i] = reg[i];
+    
+}
+
+Errors assembly (Proc* const processor, Errors* err)
 {
     assert(processor != nullptr);
     
     char str [80] = "";
     int arg = 0;
     int* new_buf = processor->new_file_buf;
+    size_t out_cmd_num = 0;
+    size_t lable_delta = 0;
+    size_t arg_value = 0;
 
     size_t input_file_commands_amount = processor->input_file_commands_amount;
     size_t size = processor->init_file_size;
 
     for (size_t cmd_num = 0; cmd_num < input_file_commands_amount; cmd_num++)
     {
+        arg_value = 0;
         processor->labels.is_label = false;
         processor->labels.label_type = DEFINE;
         char* file_buf = processor->addresses[cmd_num];
 
         sscanf(file_buf, "%s", str);
-        print_scanf_res(file_buf, str);
+        //printf("str %s\n", str);
         
         check_label(processor, str, cmd_num, &arg);
         if (processor->labels.is_label == true)
         {
-            new_buf = (int*)realloc(new_buf, (input_file_commands_amount - 1)*sizeof(int));
-            CAPACITY_CHECK(new_buf)
-            
+            lable_delta++;
             continue;
         }
             
-        
         for (size_t cmd = 0; cmd < CMD_AMT; cmd++)
         {
+            //printf("cmd %s\n", bunch_of_commands[cmd].cmd_str);
             if (strcmp(str, bunch_of_commands[cmd].cmd_str) == 0)
             {
-                new_buf[cmd_num] = bunch_of_commands[cmd].cmd_num;
+                new_buf[out_cmd_num] = bunch_of_commands[cmd].cmd_num;
+
+                if(strcmp("push", str) == 0)    //очень выбивается из остальных, не придумала пока, как вписать в остальной код
+                {
+                    int arg1 = -13;
+                    int arg2 = -13;
+                    arg_analysis(processor, &arg1, &arg2, &arg_value, &cmd_num);
+
+                    out_cmd_num++;
+                    new_buf[out_cmd_num] = arg_value;
+
+                    if (arg1 != -13)
+                    {
+                        out_cmd_num++;
+                        new_buf[out_cmd_num] = arg1;
+                    }
+                    if (arg2 != -13)
+                    {
+                        out_cmd_num++;
+                        new_buf[out_cmd_num] = arg1;
+                    }
+
+                    out_cmd_num++;
+                    continue;
+                }
+                //printf("num %d\n");
                 //print_output_buf(new_buf, input_file_commands_amount, cmd_num, str);
                 
                 for (size_t arg_num = 0; arg_num < bunch_of_commands[cmd].arg_amt; arg_num++) 
                 {
                     cmd_num++;
+                    out_cmd_num++;
                     file_buf = processor->addresses[cmd_num];
 
                     processor->labels.label_type = ARG;
@@ -207,14 +266,14 @@ Errors assemb (Proc* const processor, Errors* err)
 
                     if (processor->labels.is_label == true)
                     {
-                        new_buf[cmd_num] = arg;
+                        new_buf[out_cmd_num] = arg;
                         //print_output_buf(new_buf, input_file_commands_amount, cmd_num, str);
                     }
                         
                     else
                     {
                         sscanf(file_buf, "%d", &arg);
-                        new_buf[cmd_num] = arg;
+                        new_buf[out_cmd_num] = arg;
                         //print_output_buf(new_buf, input_file_commands_amount, cmd_num, str);
                     }
                 }
@@ -226,11 +285,86 @@ Errors assemb (Proc* const processor, Errors* err)
                 return SYN_PROBLEM;
             }
         }
+        out_cmd_num++;
     }
 
+    processor->labels.label_delta = lable_delta;
     processor->new_file_buf = new_buf;
 
     return ALL_RIGHT;
+}
+
+void arg_analysis (Proc* processor, int* arg1, int* arg2, size_t* arg_value, size_t* cmd_num)
+{
+    char* file_buf = processor->addresses[*cmd_num];
+    char str[80] = "";
+
+    SSCANF(file_buf, "%s", str)
+
+    if (strcmp(str, "[") == 0)
+    {
+        *arg_value += 4;
+        SSCANF(file_buf, "%s", str)
+
+        if (str[1] == 'x')
+        {
+            *arg1 = find_register(processor, str);
+            *arg_value += 2;
+        }
+        else
+        {
+            sscanf(file_buf, "%d", arg1);
+            *arg_value += 1;
+
+            SSCANF(file_buf, "%s", str)
+
+            if (strcmp(str, "+") == 0)
+                plus_case(processor, arg2, cmd_num, arg_value);
+            else 
+                return;
+        }
+
+        SSCANF(file_buf, "%s", str) //чтобы пропустить закрывающую скобочку
+        return;
+    }
+    else if (str[1] == 'x')
+    {
+        *arg1 = find_register(processor, str);
+        *arg_value += 2;
+        return;
+    }
+    else 
+    {
+        sscanf(file_buf, "%d", *arg1);
+        *arg_value += 1;
+
+        SSCANF(file_buf, "%s", str)
+
+        if (strcmp(str, "+") == 0)
+            plus_case(processor, arg2, cmd_num, arg_value);
+        else 
+            return;
+    }
+}
+
+void plus_case(Proc* processor, int* arg2, size_t* cmd_num, size_t* arg_value)
+{
+    char str[80] = "";
+    char* file_buf = processor->addresses[*cmd_num];
+
+    *arg_value += 2;
+
+    SSCANF(file_buf, "%s", str)
+    *arg2 = find_register(processor, str);
+}
+
+int find_register (Proc* processor, char*str)
+{
+    for (int i = 0; i < REG_AMT; i++)
+    {
+        if (strcmp(processor->registers[i].name, str) == 0)
+            return i + 1;
+    }
 }
 
 void make_labels(Proc* processor)
@@ -240,21 +374,12 @@ void make_labels(Proc* processor)
     LabelParameters label[LABELS_AMT];
 
     for (size_t i = 0; i < LABELS_AMT; i++)
-    {
-        //printf("i in make labels %d\n", i);
-
         label[i].target = -1;
-        //
-    }
 
     for (int i = 0; i < LABELS_AMT; i++)
-    {
-        printf("value %d\n", label[i].target);
         processor->labels.labels[i].target = label[i].target;
-    }
 
-    printf("in make labels\n");
-    print_labels (processor->labels.labels);
+    //print_labels (processor->labels.labels);
 }
 
 Errors check_label(Proc* processor, char* str, size_t cmd_num, int* arg)
@@ -264,10 +389,6 @@ Errors check_label(Proc* processor, char* str, size_t cmd_num, int* arg)
     LabelParameters* label = processor->labels.labels;
     
     is_label = find_label_mark(str);
-    
-    //printf("in check labels\n");
-    //print_labels (label);
-    //printf("go in\n");
 
     if (is_label == true)
     {
@@ -338,12 +459,10 @@ bool find_label_mark (const char* const str)
     bool is_label = false;
     char ch = 'a';
     int i = 0;
-    printf("str in flm %s\n", str);
 
     while (ch != '\0')
     {
         ch = str[i];
-        printf("%c", ch);
         if (ch == ':')
         {
             
@@ -370,6 +489,39 @@ void print_labels (LabelParameters* labels)
     for (size_t i = 0; i < LABELS_AMT; i++)
     {
         printf("target %d: %d\n", i, labels[i].target);
-        //printf("name %d: %s\n", i, labels[i].name);
+    }
+}
+
+void RAM_filling (Proc* processor)
+{
+    char array[RAM_AMT];
+    for (int i = 0; i < RAM_AMT; i++)
+        array[i] = '.';
+    
+    array[2] = '*';
+    array[6] = '*';
+    array[8] = '*';
+    array[10] = '*';
+    array[14] = '*';
+    array[16] = '*';
+    array[18] = '*';
+    array[22] = '*';
+
+    for(int i = 0; i < RAM_AMT; i++)
+        processor->RAM[i] = array[i];
+
+}
+
+void draw_RAM (Proc* processor)
+{
+    char* array = processor->RAM;
+
+    for (int i = 0; i < RAM_AMT; i++)
+    {
+        putchar(array[i]);
+        printf(" ");
+
+        if ((i + 1)%5 == 0)
+            printf("\n");
     }
 }

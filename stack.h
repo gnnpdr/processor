@@ -5,7 +5,7 @@
 #include <string.h>
 #include "check.h"
 
-static const int stk_amount = 4;
+
 static const int delta = 2;
 static const int double_delta = 4;
 

@@ -85,6 +85,8 @@ unsigned long long stk_hash(Stack* stk)
 void print_stk_elements(stack_element_t* data, size_t capacity, size_t size)
 {
     assert (data != nullptr);
+
+    int i = 0;
     
     for (size_t i = LEFT_CANARY_ADD; i < capacity; i++)
     {
@@ -97,5 +99,6 @@ void print_stk_elements(stack_element_t* data, size_t capacity, size_t size)
         else
             printf("[%d] = %d\n", i, data[i]);
     }
-    printf(" }\n}");
+    scanf ("%d", &i);
+
 }

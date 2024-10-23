@@ -14,6 +14,7 @@ Errors stk_ctor(Stack* stk, const char* file, const char* func, const int code_s
     stk->capacity = stk_amount;
     size_t capacity = stk->capacity;
     stack_element_t* data = stk->data;
+    printf("cap %d\n", stk->capacity);
 
     data = (stack_element_t*)calloc(capacity CANARY_CAPACITY_ADD, sizeof(stack_element_t));
     if (data == nullptr)

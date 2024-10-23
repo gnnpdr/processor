@@ -4,12 +4,14 @@
 #include <assert.h>
 #include <math.h>
 
-#define DEBUG
+//#define DEBUG
 
 typedef int stack_element_t;
 static const stack_element_t poison = 13;
 
 #define POSITION , __FILE__, __func__, __LINE__
+
+static const int stk_amount = 6;
 
 struct Stack
 {
@@ -24,7 +26,7 @@ struct Stack
 
     stack_element_t* data;
     size_t size;
-    size_t capacity;
+    size_t capacity = stk_amount;
 };
 
 enum Errors

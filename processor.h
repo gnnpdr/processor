@@ -13,6 +13,13 @@ enum ResultOfComparing
     GREATER_AND_EQUAL = 5
 };
 
+enum ArgType
+{
+    INT = 1,
+    REG = 2,
+    RAM = 4
+};
+
 #define JUMP_INFO       assert(stk != nullptr);                     \
                         assert(processor != nullptr);               \
                         assert(err != nullptr);                     \
@@ -42,7 +49,7 @@ ResultOfComparing comparing(int first_el, int sec_el);
 void jump (Proc* const processor, Stack* const stk, Errors* const err);
 
 
-void make_regs(Proc* processor);
+
 void popr(Stack* const stk, Proc* const processor, Errors* const err);
 void pushr (Stack* const stk, Proc* const processor, Errors* const err);
 
