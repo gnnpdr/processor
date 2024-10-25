@@ -24,7 +24,7 @@ Errors stk_ctor(Stack* stk, const char* file, const char* func, const int code_s
     }
     
     for (size_t i = 0; i < capacity; i++)
-        data[i LEFT_CANARY_ADD] = poison;
+        data[i LEFT_CANARY_ADD] = POISON;
 
     stk->data = data;
 

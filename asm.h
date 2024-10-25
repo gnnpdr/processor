@@ -1,14 +1,11 @@
-#ifndef _COMPILE_H_
-#define _COMPILE_H_
+#ifndef _ASM_H_
+#define _ASM_H_
 
-#include "check_proc.h"
+#include "input.h"
 
-
-static const size_t RAM_AMT           = 25;
-static const size_t CMD_AMT           = 15;
-static const size_t MAX_INPUT_CMD_AMT = 60;
-static const size_t LABELS_AMT        = 10;
-static const size_t REG_AMT           =  5;
+static const int CMD_AMT = 15;
+static const int start_value = -1;
+static const int OUT_AMT = 100;
 
 enum CommandsNums
 {
@@ -37,7 +34,7 @@ struct CommandParameters
 };
 
 
-const struct CommandParameters PushStr  =  {.cmd_str = "push" , .cmd_num = PUSH , .arg_amt = 3};  //максимальное значение количества агрументов
+const struct CommandParameters PushStr  =  {.cmd_str = "push" , .cmd_num = PUSH , .arg_amt = 3};
 const struct CommandParameters AddStr   =  {.cmd_str = "add"  , .cmd_num = ADD  , .arg_amt = 0};
 const struct CommandParameters SubStr   =  {.cmd_str = "sub"  , .cmd_num = SUB  , .arg_amt = 0};
 const struct CommandParameters MulStr   =  {.cmd_str = "mul"  , .cmd_num = MUL  , .arg_amt = 0};
@@ -49,7 +46,7 @@ const struct CommandParameters DumpStr  =  {.cmd_str = "dump" , .cmd_num = DUMP 
 const struct CommandParameters HltStr   =  {.cmd_str = "hlt"  , .cmd_num = HLT  , .arg_amt = 0};
 const struct CommandParameters OutStr   =  {.cmd_str = "out"  , .cmd_num = OUT  , .arg_amt = 1};
 const struct CommandParameters JumpStr  =  {.cmd_str = "jump" , .cmd_num = JUMP , .arg_amt = 2};
-const struct CommandParameters PopStr   =  {.cmd_str = "pop"  , .cmd_num = POP  , .arg_amt = 1};
+const struct CommandParameters PopStr   =  {.cmd_str = "pop"  , .cmd_num = POP  , .arg_amt = 3};
 const struct CommandParameters PushrStr =  {.cmd_str = "pushr", .cmd_num = PUSHR, .arg_amt = 1};
 const struct CommandParameters PoprStr  =  {.cmd_str = "popr" , .cmd_num = POPR , .arg_amt = 1};
 
@@ -69,103 +66,25 @@ static const struct CommandParameters bunch_of_commands [CMD_AMT]  =    {PushStr
                                                                         PushrStr ,
                                                                         PoprStr };
 
-struct RegisterParameters
-{
-    int value;
-    char* name;
-};
-
-enum LabelType
-{
-    DEFINE,
-    ARG
-};
-
-struct LabelParameters
-{
-    size_t target;
-    char* name;
-};
-
-struct Labels
-{
-    LabelParameters labels[LABELS_AMT];
-    LabelType label_type;
-    bool is_label;
-    size_t label_delta;
-};
-
-struct Proc
-{
-    char* file_buf;
-    int* new_file_buf;
-    size_t input_file_commands_amount;
-    size_t init_file_size;
-    
-    struct RegisterParameters* registers;
-
-    size_t ip;
-    size_t* symb_amount_arr;
-    char** addresses;
-    struct Labels labels;
-
-    char RAM[RAM_AMT];
-    size_t skip_arg;
-};
-
-
-#define FILE_CHECK(file)    do                                      \
-                            {                                       \
-                                if (file == nullptr)                \
-                                {                                   \
-                                    printf("file wasnt opened\n");  \
-                                    return FILE_PROBLEM;            \
-                                }                                   \
-                            }while(0);
-
-#define CAPACITY_CHECK(buf) do                                      \
-                            {                                       \
-                                if (buf == nullptr)                 \
-                                {                                   \
-                                    printf("no place\n");           \
-                                    return LOCATION_ERROR;          \
-                                }                                   \
-                            }while(0);
-
-
-
 #define SSCANF(file_buf, ...)   do                                                   \
                                 {                                                    \
-                                    *(cmd_num)++;                                    \
-                                    file_buf = processor->addresses[*cmd_num];       \
+                                    cmd_num++;                                    \
+                                    file_buf = proc->addresses[*cmd_num];            \
                                     sscanf (file_buf, __VA_ARGS__);                  \
                                 }while(0);
 
+#define CAP_CHECK(out_cmd_num, out_cmd_amt)     do                                                                  \
+                                                {                                                                   \
+                                                    if (out_cmd_num == out_cmd_amt - 1)                             \
+                                                    {                                                               \
+                                                        out_cmd_amt += OUT_AMT;                                     \
+                                                        new_buf = (int*)realloc(new_buf, out_cmd_amt*sizeof(int));  \
+                                                    }                                                               \
+                                                }while(0);
 
-Errors proc (const char* const name, Proc* const processor, Errors* err);
 
-Errors init_buf (const char* const  name, Proc* processor, Errors* err);
-size_t find_file_size (const char* const name);
+void assembly (char* name, Processor* proc);
 
-void processing_text (Proc* const processor);
-Errors filling_addresses(Proc* processor);
+void proc_dtor (Processor* proc, char* name);
 
-Errors output_file(Proc* processor, Errors* err);
-Errors assembly (Proc* const processor, Errors* err);
-
-void arg_analysis (Proc* processor, int* arg1, int* arg2, size_t* arg_value, size_t* cmd_num);
-void plus_case(Proc* processor, int* arg2, size_t* cmd_num, size_t* arg_value);
-
-void make_labels(Proc* processor);
-void make_regs(Proc* processor);
-Errors check_label(Proc* processor, char* str, size_t cmd_num, int* arg);
-bool find_label_mark (const char* const str);
-
-void proc_dtor (Proc* processor);
-
-void print_labels (LabelParameters* labels);
-
-void RAM_filling (Proc* processor);
-void draw_RAM (Proc* processor);
-
-#endif //_COMPILE_H_
+#endif //_ASM_H_

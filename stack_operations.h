@@ -1,7 +1,3 @@
-
-#include "asm.h"
-
-
 #ifndef _PUSH_H_
 #define _PUSH_H_
 

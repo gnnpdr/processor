@@ -85,8 +85,6 @@ unsigned long long stk_hash(Stack* stk)
 void print_stk_elements(stack_element_t* data, size_t capacity, size_t size)
 {
     assert (data != nullptr);
-
-    int i = 0;
     
     for (size_t i = LEFT_CANARY_ADD; i < capacity; i++)
     {
@@ -94,11 +92,9 @@ void print_stk_elements(stack_element_t* data, size_t capacity, size_t size)
             printf(" * ");
         else
             printf("   ");
-        if (data[i] == poison)
-            printf("[%d] = %d (POISON)\n", i, poison);
+        if (data[i] == POISON)
+            printf("[%d] = %d (POISON)\n", i, POISON);
         else
             printf("[%d] = %d\n", i, data[i]);
     }
-    scanf ("%d", &i);
-
 }

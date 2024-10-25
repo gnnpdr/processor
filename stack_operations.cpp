@@ -49,7 +49,7 @@ Errors change_capacity(Stack* stk, size_t new_capacity, size_t capacity, Errors*
     if (new_capacity > capacity)
     {
         for (size_t i = 0; i <= capacity LEFT_CANARY_ADD; i++)
-            data[capacity LEFT_CANARY_ADD + i] = poison;
+            data[capacity LEFT_CANARY_ADD + i] = POISON;
     }
 
     stk->capacity = new_capacity;
@@ -85,7 +85,7 @@ Errors stk_pop(Stack* stk, stack_element_t* elem, Errors* err)
 
     size--; 
     *elem = data[size];
-    data[size] = poison;
+    data[size] = POISON;
     
     stk->size = size;
 

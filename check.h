@@ -7,7 +7,7 @@
 //#define DEBUG
 
 typedef int stack_element_t;
-static const stack_element_t poison = 13;
+static const stack_element_t POISON = -13;
 
 #define POSITION , __FILE__, __func__, __LINE__
 
