@@ -6,14 +6,11 @@
 
 void get_name(Text* input, char** argv)
 {
-    //printf("%s\n", argv[1]);
     char* name = (char*)calloc(strlen(argv[1]), sizeof(char));
-    ALOCATION_CHECK(*name)  //непонятно, выдает ноль
+    ALOCATION_CHECK(*name)
     
     strcpy(name, argv[1]);
     input->name = name;
-
-    //printf("name %s\n %p\n", name, name);
 
     return;
 }
@@ -21,7 +18,6 @@ void get_name(Text* input, char** argv)
 void get_file(Text* input)
 {
     FILE* file; 
-    //printf("name %s\n %p\n", input->name, input->name);
     file = fopen(input->name, "rb");
     FILE_CHECK(file)
 
@@ -32,9 +28,6 @@ void get_file(Text* input)
 
     fread(file_buf, sizeof(char), size, file);
     ALOCATION_CHECK(file_buf)
-
-    //for (int i = 0; i < size; i++)
-    //    printf("%c", file_buf[i]);
 
     fclose(file);
 
@@ -68,6 +61,8 @@ void remove_carriage(Text* input)
 
     addresses[word_cnt] = buf + symb_num;
 
+    int str = 0;
+
     while (symb_num < size)
     {
         char* ch = buf + symb_num;
@@ -94,10 +89,6 @@ void remove_carriage(Text* input)
 
     for (int i = 0; i < word_cnt; i++)
         input->addresses[i] = addresses[i]; 
-
-
-    //for (int i = 0; i < word_cnt; i++)
-    //    printf("%s, %p\n", input->addresses[i], input->addresses[i]);
 
     input->file_buf = buf;
     input->cmd_amt = word_cnt;

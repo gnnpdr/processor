@@ -11,6 +11,10 @@ static const size_t LABELS_AMT = 10;
 static const size_t REG_AMT = 5;
 static const size_t RAM_AMT = 50;
 
+static const char LABEL_MARK = ':';
+static const char COMMENT_MARK = ';';
+
+
 enum LabelType
 {
     LABEL_DEF,
@@ -27,7 +31,6 @@ struct Labels
 {
     LabelParameters* labels;
     LabelType label_type;
-    bool is_label;
 };
 
 struct RegisterParameters
@@ -35,6 +38,7 @@ struct RegisterParameters
     int value;
     char* name;
 };
+
 
 struct Processor
 {
@@ -97,7 +101,7 @@ static const struct CommandParameters bunch_of_commands [CMD_AMT]  =    {PushStr
                                                                         JumpStr  ,
                                                                         PopStr   };
 
-void assembly (Text* input, Processor* proc);
+void assembly (Text* input, Labels* labels);
 void fill_labels(Labels* labels);
 void handle_commands(Labels* labels, Processor* proc, Text* input);
 void cmds(Labels* labels, Text* input, Stack* new_buf, Processor* proc);

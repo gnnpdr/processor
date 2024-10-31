@@ -7,9 +7,13 @@ static const size_t MAX_CMD_AMT = 100;
 struct Text 
 {
     char* name;
+
     char* file_buf;
+
     size_t init_file_size;
+
     char* addresses[MAX_CMD_AMT];
+
     size_t cmd_amt;
 
     size_t cmd_num;

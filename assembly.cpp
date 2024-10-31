@@ -2,19 +2,17 @@
 
 #include "assembly.h"
 
-void assembly (Text* input, Processor* proc)
+void assembly (Text* input, Labels* labels, Stack* new_buf)
 {
-    Labels labels = {};             //нехорошо создавать внутри функции
-    stk_ctor(&(proc->new_file_buf)); //отдельный массив, не связывать с процессором
+    ctor_labels(labels);
+    fill_labels(labels, input);
 
-    fill_labels(&labels);
-
-    handle_commands(&labels, proc, input);
+    handle_commands(labels, input, new_buf);
   
-    labels_dtor(&labels);
+    labels_dtor(labels);
 }
 
-void fill_labels(Labels* labels)
+void ctor_labels(Labels* labels)
 {
     LabelParameters* label = (LabelParameters*)calloc(LABELS_AMT, sizeof(LabelParameters));
 
@@ -24,19 +22,85 @@ void fill_labels(Labels* labels)
     labels->labels = label;
 }
 
-void handle_commands(Labels* labels, Processor* proc, Text* input)
+void fill_labels(Labels* labels, Text* input)
 {
-    Stack new_buf = {};
-    stk_ctor(&new_buf);
-    //printf("hey 1\n");
-    size_t cmd_amt = input->cmd_amt;
+    char** buf = input->addresses;
+    bool is_label = false;
+    bool is_jump  = false;
+    int label_ind = 0;
+    char str[80] = "";
 
-    for (int cmd_num = 0; cmd_num < cmd_amt; cmd_num++)
+    for (int word = 0; word < input->cmd_amt; word++)
     {
-        //printf("new cmd %d\n", cmd_num);
-        input->cmd_num = cmd_num;       //сделать отдельный проход с метками
-        cmds(labels, input, &new_buf, proc);  //rename one 
+        strcpy(str, buf[word]);
+
+        is_label = find_label_mark(str);
+
+        if (is_label == true)
+        {
+            label_ind = find_label(labels, str);
+
+            is_jump = find_jump(buf[word - 1]);  //ничего получше придумать не могу
+
+            if (is_jump != true && label_ind != START_VALUE)  //только надо проверить, что не агрумент, только difine записываем иначе может быть неверный номер
+            {
+                labels->labels[label_ind].target = word;
+                labels->labels[label_ind].name = buf[word];
+            }
+
+            is_label = false;  //чтобы зашел еще раз потом
+        }
     }
+}
+
+bool find_label_mark (const char* const str)
+{
+    bool is_label = false;
+
+    char ch = 'a';
+    int   i =  0;
+
+    while (ch != '\0')
+    {
+        ch = str[i];
+
+        if (ch == LABEL_MARK)
+            is_label = true;
+        
+        i++;
+    }
+
+    return is_label;
+}
+
+bool find_jump (char* str)
+{
+    if (strcmp(str, "ja") == 0  || strcmp(str, "jae") == 0 || strcmp(str, "jb") == 0 \
+     || strcmp(str, "jbe") == 0 || strcmp(str, "je") == 0  || strcmp(str, "jne") == 0)
+        return true;
+    else
+        return false;
+}
+
+int find_label(Labels* labels, char* str)
+{
+    for (int i = 0; i < LABELS_AMT; i++) //лаги-баги, это константа...
+    {
+        if (labels->labels[i].name == nullptr || strcmp(labels->labels[i].name, str) == 0)
+            return i;
+    }
+
+    return -1; //можно ошибку добавить
+}
+
+
+
+
+
+void handle_commands(Labels* labels, Text* input, Stack* new_buf)
+{
+    asm_cmds(labels, input, new_buf); 
+
 
     proc->new_file_buf = new_buf;
     int k = 0;
@@ -55,56 +119,49 @@ void handle_commands(Labels* labels, Processor* proc, Text* input)
     stk_dtor(&new_buf);
 }
 
-void cmds(Labels* labels, Text* input, Stack* new_buf, Processor* proc)
+void asm_cmds(Labels* labels, Text* input, Stack* new_buf)
 {
-    size_t cmd_num = input->cmd_num;
+    size_t cmd_amt = input->cmd_amt;
     char str [80] = "";
-    //printf("new_buf %p\n", new_buf);
-    //printf("elem %d\n", new_buf->data[0]);
+    char* file_buf;
+    bool is_label = false;
 
-    labels->is_label = false;
-    labels->label_type = LABEL_DEF;
-
-    char* file_buf = input->addresses[cmd_num];
-
-    sscanf(file_buf, "%s", str);
-    //printf("str %s\n", str);
-
-    find_label_mark(str);
-    if (labels->is_label == true)
+    for (int cmd_num = 0; cmd_num < cmd_amt; cmd_num++)
     {
-        //printf("is label\n");
-        label_define(labels, cmd_num, str);
-        return;
-    }
-    //printf("not label\n");
+        labels->label_type = LABEL_DEF;
+        is_label = false;
+        
+        file_buf = input->addresses[cmd_num];
+        sscanf(file_buf, "%s", str);
 
-    for (size_t cmd = 0; cmd < CMD_AMT; cmd++)
-    {
-        //printf("cmd_an\n");
-        if (strcmp(str, bunch_of_commands[cmd].cmd_str) == 0)
+        is_label = find_label_mark(str);
+        if (is_label == true)
+            continue;
+
+        for (size_t cmd = 0; cmd < CMD_AMT; cmd++)
         {
-            //printf("cmd %s\n", bunch_of_commands[cmd].cmd_str);
-            //printf("num %d\n", bunch_of_commands[cmd].cmd_num);
-            //printf("here\n");
-            stk_push(new_buf, bunch_of_commands[cmd].cmd_num);
-            
-            if(strcmp("push", str) == 0 || strcmp("pop", str) == 0) //строковые константы, отдельная функция
+            if (strcmp(str, bunch_of_commands[cmd].cmd_str) == 0)
             {
-                //printf("push\n");
-                push_pop_case(new_buf, input, proc, cmd);
+                stk_push(new_buf, bunch_of_commands[cmd].cmd_num);
+            
+                if(strcmp("push", str) == 0 || strcmp("pop", str) == 0) //строковые константы, отдельная функция
+                {
+                    //printf("push\n");
+                    complicated_arg_case(new_buf, input, proc, cmd);
+                    break;
+                }
+
+                args(labels, input, cmd, new_buf);
+                
                 break;
             }
-
-            args(labels, input, cmd, new_buf);
-                
-            break;
-        }
-        else if (cmd > CMD_AMT - 1)
-        {
-            printf("there is no such command\n");
+            else if (cmd > CMD_AMT - 1)
+            {
+                printf("there is no such command\n");
+            }
         }
     }
+    
     return;
 }
 
@@ -201,25 +258,7 @@ void label_arg(Labels* labels, size_t cmd_num, int* arg, char* str)
     return;
 }
 
-bool find_label_mark (const char* const str)
-{
-    bool is_label = false;
 
-    char ch = 'a';
-    int   i =  0;
-
-    while (ch != '\0')
-    {
-        ch = str[i];
-
-        if (ch == ':')  //отдельный знак, константа
-            is_label = true;
-        
-        i++;
-    }
-
-    return is_label;
-}
 
 void push_pop_case (Stack* new_buf, Text* input, Processor* proc, size_t cmd)
 {
