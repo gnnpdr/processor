@@ -3,7 +3,7 @@
 #include "check.h"
 
 #ifdef DEBUG
-void dump(Stack* stk, const char* file, const char* func, const int code_str)
+void stk_dump(Stack* stk, const char* file, const char* func, const int code_str)
 {
     stack_element_t* data = stk->data;
     size_t size = stk->size;
@@ -82,9 +82,13 @@ unsigned long long stk_hash(Stack* stk)
 }
 #endif
 
-void print_stk_elements(stack_element_t* data, size_t capacity, size_t size)
+void print_stk_elements(Stack* stk)
 {
-    assert (data != nullptr);
+    assert (stk != nullptr);
+
+    int* data = stk->data;
+    int size = stk->size;
+    int capacity = stk->capacity;
     
     for (size_t i = LEFT_CANARY_ADD; i < capacity; i++)
     {

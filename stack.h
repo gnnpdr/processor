@@ -9,7 +9,13 @@
 static const int delta = 2;
 static const int double_delta = 4;
 
-Errors stk_ctor(Stack* stk, const char* file, const char* func, const int code_str, Errors* err);
+
+void stk_push(Stack* stk, stack_element_t element);
+
+void stk_pop(Stack* stk, stack_element_t* elem);
+void change_capacity(Stack* stk, size_t new_capacity, size_t capacity);
+
+void stk_ctor(Stack* stk);
 
 void stk_dtor(Stack* stk);
 

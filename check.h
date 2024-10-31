@@ -74,8 +74,8 @@ enum Errors
     
 #endif
 
-void dump(Stack* stk, const char* file, const char* func, const int code_str);
-void print_stk_elements(stack_element_t* data, size_t capacity, size_t size);
+void stk_dump(Stack* stk, const char* file, const char* func, const int code_str);
+void print_stk_elements(Stack* stk);
 Errors check(Stack* stk);
 
 unsigned long long stk_hash(Stack* stk);

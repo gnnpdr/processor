@@ -1,59 +1,23 @@
 #ifndef _INPUT_H_
 #define _INPUT_H_
-#include "stack_operations.h"
+#include "stack.h"
 
-static const size_t LABELS_AMT = 10;
-static const size_t REG_AMT = 5;
-static const size_t RAM_AMT = 50;
+static const size_t MAX_CMD_AMT = 100;
 
-enum LabelType
+struct Text 
 {
-    LABEL_DEF,
-    ARG
-};
-
-struct LabelParameters
-{
-    int target;
     char* name;
-};
-
-struct Labels
-{
-    LabelParameters labels[LABELS_AMT];
-    LabelType label_type;
-    bool is_label;
-};
-
-struct RegisterParameters
-{
-    int value;
-    char* name;
-};
-
-struct Processor
-{
     char* file_buf;
     size_t init_file_size;
-    size_t input_ncmd;
-    
-    int* new_file_buf;
+    char* addresses[MAX_CMD_AMT];
+    size_t cmd_amt;
 
-    size_t label_delta;
-    struct Labels labels;
-
-    struct RegisterParameters registers[REG_AMT];
-    
-    size_t ip;
-    char** addresses;
-
-    size_t skip_arg;
-    int RAM[RAM_AMT];
+    size_t cmd_num;
 };
 
-#define LOCATION_CHECK(buf) do                                      \
+#define ALOCATION_CHECK(buf) do                                      \
                             {                                       \
-                                if (buf == 0)                       \
+                                if (&buf == 0)                       \
                                 {                                   \
                                     printf("no place\n");           \
                                     return;                         \
@@ -70,8 +34,10 @@ struct Processor
                             }while(0);
 
 
-void get_name(char** name, char** argv);
-void get_file(char* name, Processor* proc);
-void proc_buf(Processor* proc);
+void get_name(Text* input, char** argv);
+void get_file(Text* input);
+size_t find_file_size (char* name);
+void remove_carriage(Text* input);
+void input_dtor (Text* input);
 
 #endif //_INPUT_H_

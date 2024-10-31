@@ -1,4 +1,4 @@
-#include <stdio.h>
+/*#include <stdio.h>
 
 #include "proc.h"
 
@@ -8,7 +8,7 @@ static int* get_arg_addr (Processor* proc, int* arg);
 static void jump (Processor* const proc, Stack* const stk, Errors* const err);
 static ResultOfComparing comparing(int first_el, int sec_el);
 
-void processor (Stack* const stk, Processor* const proc, Errors* const err)
+void proc_code (Stack* const stk, Processor* const proc, Errors* const err)
 {
     size_t ip = 0;
     int* program = proc->new_file_buf;
@@ -18,58 +18,50 @@ void processor (Stack* const stk, Processor* const proc, Errors* const err)
     int sec_el = 0;
     int arg = 0;
     size_t size = proc->input_ncmd;
-    printf("cool 1\n");
+
     while(ip < size)
     {
-        printf("cool 2\n");
-        print_stk_elements(stk->data, stk->capacity, stk->size);
+        print_stk_elements(stk);
         switch(program[ip])
         {
             case PUSH:
                 proc->ip = ip;
-                stk_push (stk, get_arg(proc), err);
-                ip = proc->ip;
+                stk_push (stk, get_arg(proc), err);   //получается, чтобы добавить указатели на эти функции, надо определить их раньше структуры с командами, это задолго до этого файла, стоит ли тогда добавлять из в структуру?
+                ip = proc->ip;                  //да и вообще, сделать один тайпдэф на них нельзя, так что будет очень некрасиво 
                 break;
 
             case ADD:
-                stk_pop(stk, &sec_el, err);
-                stk_pop(stk, &first_el, err);
+                TWO_ARGS
                 stk_push (stk, first_el + sec_el, err);
                 break;
 
             case SUB:
-                stk_pop(stk, &sec_el, err);
-                stk_pop(stk, &first_el, err);
+                TWO_ARGS
                 stk_push (stk, first_el - sec_el, err);
                 break;
 
             case MUL:
-                stk_pop(stk, &sec_el, err);
-                stk_pop(stk, &first_el, err);
+                TWO_ARGS
                 stk_push (stk, first_el * sec_el, err);
                 break;
 
             case DIV:
-                stk_pop(stk, &sec_el, err);
-                stk_pop(stk, &first_el, err);
+                TWO_ARGS
                 stk_push (stk, first_el / sec_el, err);
                 break;
 
             case SQRT:
-                ip++;
-                stk_pop(stk, &arg, err);
+                ONE_ARG
                 stk_push (stk, pow(arg, 0.5), err);
                 break;
                 
             case SIN:
-                ip++;
-                stk_pop(stk, &arg, err);
+                ONE_ARG
                 stk_push (stk, sin(arg), err);
                 break;
 
             case COS:
-                ip++;
-                stk_pop(stk, &arg, err);
+                ONE_ARG
                 stk_push (stk, cos(arg), err);
                 break;
 
@@ -139,7 +131,6 @@ int* get_arg_addr (Processor* proc, int* arg)
         printf("here\n");
         result = arg;
     }
-        
 
     if (arg_type & INT)
         *result += program[ip++];
@@ -281,3 +272,4 @@ void jump (Processor* const proc, Stack* const stk, Errors* const err)
 }
 
 
+*/

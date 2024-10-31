@@ -1,4 +1,4 @@
-#ifndef _PROC_H_
+/*#ifndef _PROC_H_
 #define _PROC_H_
 
 #include "asm.h"
@@ -28,6 +28,12 @@ enum DoJump
     NO_JUMP
 };
 
+#define TWO_ARGS        stk_pop(stk, &sec_el, err);                 \
+                        stk_pop(stk, &first_el, err);
+
+#define ONE_ARG         ip++;                                       \
+                        stk_pop(stk, &arg, err);
+
 #define JUMP_INFO       assert(stk != nullptr);                     \
                         assert(processor != nullptr);               \
                         assert(err != nullptr);                     \
@@ -48,7 +54,7 @@ struct JumpParameters
     comparator_t comparator;
 };
 
-void processor (Stack* const stk, Processor* const proc, Errors* const err);
+void proc_code (Stack* const stk, Processor* const proc, Errors* const err);
 
 DoJump comparator_less (int first_el, int sec_el);
 DoJump comparator_equal (int first_el, int sec_el);
@@ -64,4 +70,4 @@ static const struct JumpParameters jump_array[JUMP_AMT] = {{.res = LESS, .compar
                                                      {.res = LESS_AND_EQUAL, .comparator = comparator_less_and_equal},
                                                      {.res = GREATER_AND_EQUAL, .comparator = comparator_greater_and_equal},};
 
-#endif //_PROC_H_
+#endif //_PROC_H_*/

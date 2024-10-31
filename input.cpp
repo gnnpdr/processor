@@ -4,40 +4,42 @@
 
 #include "input.h"
 
-
-static size_t find_file_size (char* name);
-
-static void make_str(Processor* proc);
-static void get_addr(Processor* proc);
-
-void get_name(char** name, char** argv)
+void get_name(Text* input, char** argv)
 {
-    *name = (char*)calloc(strlen(argv[1]), sizeof(char));
-    LOCATION_CHECK(*name)
+    //printf("%s\n", argv[1]);
+    char* name = (char*)calloc(strlen(argv[1]), sizeof(char));
+    ALOCATION_CHECK(*name)  //непонятно, выдает ноль
+    
+    strcpy(name, argv[1]);
+    input->name = name;
 
-    strcpy(*name, argv[1]);
+    //printf("name %s\n %p\n", name, name);
 
     return;
 }
 
-void get_file(char* name, Processor* proc)
+void get_file(Text* input)
 {
     FILE* file; 
-    file = fopen(name, "rb");
+    //printf("name %s\n %p\n", input->name, input->name);
+    file = fopen(input->name, "rb");
     FILE_CHECK(file)
 
-    size_t size = find_file_size(name);
+    size_t size = find_file_size(input->name);
 
     char* file_buf = (char*)calloc(size, sizeof(char));
-    LOCATION_CHECK(file_buf)
+    ALOCATION_CHECK(file_buf)
 
     fread(file_buf, sizeof(char), size, file);
-    LOCATION_CHECK(file_buf)
+    ALOCATION_CHECK(file_buf)
+
+    //for (int i = 0; i < size; i++)
+    //    printf("%c", file_buf[i]);
 
     fclose(file);
 
-    proc->file_buf = file_buf;
-    proc->init_file_size = size;
+    input->file_buf = file_buf;
+    input->init_file_size = size;
 
     return;
 }
@@ -55,19 +57,16 @@ size_t find_file_size (char* name)
     return file_info.st_size;
 }
 
-void proc_buf(Processor* proc)
-{
-    make_str(proc);
-    get_addr(proc);
-}
-
-void make_str(Processor* proc)
+void remove_carriage(Text* input)
 {
     size_t symb_num = 0;
     size_t word_cnt = 0;
 
-    size_t size = proc->init_file_size;
-    char* buf = proc->file_buf;
+    size_t size = input->init_file_size;
+    char* buf = input->file_buf;
+    char** addresses = input->addresses;
+
+    addresses[word_cnt] = buf + symb_num;
 
     while (symb_num < size)
     {
@@ -77,6 +76,7 @@ void make_str(Processor* proc)
         {
             *ch = '\0';
             word_cnt++;
+            addresses[word_cnt] = buf + symb_num + 1;
         }
 
         else if (*ch == '\r')
@@ -86,47 +86,25 @@ void make_str(Processor* proc)
         {
             *ch = '\0';
             word_cnt++;
+            addresses[word_cnt] = buf + symb_num + 1;
         }
 
         symb_num++;
     }
 
-    proc->input_ncmd = word_cnt;
-    proc->file_buf = buf;
+    for (int i = 0; i < word_cnt; i++)
+        input->addresses[i] = addresses[i]; 
+
+
+    //for (int i = 0; i < word_cnt; i++)
+    //    printf("%s, %p\n", input->addresses[i], input->addresses[i]);
+
+    input->file_buf = buf;
+    input->cmd_amt = word_cnt;
 }
 
-void get_addr(Processor* proc)
+void input_dtor (Text* input)
 {
-    size_t symb_num = 0;
-    int string_index = 0;
-    char* ch = 0;
-
-    char* buf = proc->file_buf;
-    size_t size = proc->init_file_size;
-
-    char** addresses = (char**)calloc(proc->input_ncmd, sizeof(char*));
-    LOCATION_CHECK(addresses)
-    
-    addresses[string_index] = buf + symb_num;
-
-    while (symb_num < size)
-    {
-        ch = buf + symb_num;
-
-        if (*ch == '\0')
-        {
-            string_index++;
-            symb_num++;
-            ch = buf + symb_num;
-
-            if (*ch == '\0') //на случай \r
-                symb_num++;
-
-            addresses[string_index] = buf + symb_num;
-        }
-
-        symb_num++;
-    }
-
-    proc->addresses = addresses;
+    free(input->name);
+    free(input->file_buf);
 }
