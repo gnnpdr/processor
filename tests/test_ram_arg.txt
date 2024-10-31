@@ -1,0 +1,4 @@
+push [ 15 + bx ]
+push 5
+add
+hlt

@@ -54,25 +54,25 @@ void stk_push(Stack* stk, stack_element_t element)
 
     if (size >= capacity)
     {
-        printf("START\n");
+        /*printf("START\n");
         for (int i = 0; i < stk->capacity; i++)
             printf("%d ", stk->data[i]);
 
-        printf("\n");
+        printf("\n");*/
         size_t new_capacity = capacity * delta;
         change_capacity(stk, new_capacity, capacity);
 
-        printf("END\n");
+        /*printf("END\n");
         for (int i = 0; i < stk->capacity; i++)
             printf("%d ", stk->data[i]);
 
-        printf("\n");
+        printf("\n");*/
         stk->data = data; 
         //RETURN(*err)
     }
 
     //printf("addr 1 %p\n", data + size);
-    printf("-----------------------------------------------------------------------------------------");
+    /*printf("-----------------------------------------------------------------------------------------");
     printf("ELEMENT %d\n", element);
     
     printf("\n\n");
@@ -90,9 +90,9 @@ void stk_push(Stack* stk, stack_element_t element)
     printf("\n\n");
 
     printf("ELEMENT %d\n", element);
-    printf("ADDRESS %p\n", data + size);
+    printf("ADDRESS %p\n", data + size);*/
     data[size] = element;
-    printf("data 2 %d\n", data[size]);
+    //printf("data 2 %d\n", data[size]);
     size++;
     stk->size = size;
     //printf("its all right in stack\n");

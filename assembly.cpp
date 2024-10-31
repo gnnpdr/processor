@@ -4,12 +4,11 @@
 
 void assembly (Text* input, Processor* proc)
 {
-    //printf("1\n");
     Labels labels = {};             //нехорошо создавать внутри функции
     stk_ctor(&(proc->new_file_buf)); //отдельный массив, не связывать с процессором
-    //printf("2\n");
+
     fill_labels(&labels);
-    //printf("3\n");
+
     handle_commands(&labels, proc, input);
   
     labels_dtor(&labels);
@@ -42,17 +41,16 @@ void handle_commands(Labels* labels, Processor* proc, Text* input)
     proc->new_file_buf = new_buf;
     int k = 0;
 
-    /*for (int i = 0; i < 15; i++)
+    for (int i = 0; i < proc->new_file_buf.capacity; i++)
         printf("%d ", proc->new_file_buf.data[i]);
-    while (proc->new_file_buf.data[k] != POISON)
+
+    /*while (proc->new_file_buf.data[k] != POISON)
     {
         printf("%d ", proc->new_file_buf.data[k]);
         k++;
     }*/
 
 
-   /*for (int i = 0; i < 15; i++)
-        printf("%d ", stk1->data[i]);*/
 
     stk_dtor(&new_buf);
 }
@@ -94,11 +92,11 @@ void cmds(Labels* labels, Text* input, Stack* new_buf, Processor* proc)
             if(strcmp("push", str) == 0 || strcmp("pop", str) == 0) //строковые константы, отдельная функция
             {
                 //printf("push\n");
-                push_pop_case(new_buf, input, proc, cmd, stk1);
+                push_pop_case(new_buf, input, proc, cmd);
                 break;
             }
 
-            args(labels, input, cmd, new_buf, stk1);
+            args(labels, input, cmd, new_buf);
                 
             break;
         }
@@ -110,7 +108,7 @@ void cmds(Labels* labels, Text* input, Stack* new_buf, Processor* proc)
     return;
 }
 
-void args (Labels* labels, Text* input, size_t cmd, Stack* new_buf, Stack* stk1)
+void args (Labels* labels, Text* input, size_t cmd, Stack* new_buf)
 {
     int arg = 0;
     char str[80] = "";
@@ -129,14 +127,12 @@ void args (Labels* labels, Text* input, size_t cmd, Stack* new_buf, Stack* stk1)
         {
             label_arg(labels, cmd_num, &arg, str);
             stk_push(new_buf, arg);
-            stk_push(stk1, arg);
             return;
         }         
         else
         {
             sscanf(file_buf, "%d", &arg);
             stk_push(new_buf, arg);
-            stk_push(stk1, arg);
         }
     }
 
@@ -225,7 +221,7 @@ bool find_label_mark (const char* const str)
     return is_label;
 }
 
-void push_pop_case (Stack* new_buf, Text* input, Processor* proc, size_t cmd, Stack* stk1)
+void push_pop_case (Stack* new_buf, Text* input, Processor* proc, size_t cmd)
 {
     printf("this case\n");
     int arg1 = POISON;
@@ -241,12 +237,10 @@ void push_pop_case (Stack* new_buf, Text* input, Processor* proc, size_t cmd, St
     if (arg1 != POISON)
     {
         stk_push(new_buf, arg1);
-        stk_push(stk1, arg1);
     }
     if (arg2 != POISON)
     {
         stk_push(new_buf, arg2);
-        stk_push(stk1, arg2);
     }
 
     return;

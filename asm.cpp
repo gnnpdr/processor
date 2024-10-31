@@ -4,7 +4,7 @@
 #include "asm.h"
 
 static void get_output_file(Processor* proc);
-static size_t asm_file(Processor* proc);
+static size_t assembly_file(Processor* proc);
 static void args (Processor* proc, char* file_buf, int* new_buf, size_t* out_cmd_num, int* cmd_num, size_t cmd, size_t* out_cmd_amt);
 
 static void fill_labels(Processor* proc);
@@ -19,7 +19,7 @@ static int find_register (Processor* proc, char* str);
 
 static void fill_RAM (Processor* proc);
 
-void assembly (char* name, Processor* proc)
+void assembly_code (char* name, Processor* proc)
 {
     get_file(name, proc);
 
@@ -42,7 +42,7 @@ void get_output_file(Processor* proc)
     fill_labels(proc);
     fill_regs(proc);
     fill_RAM(proc);
-    size_t size = asm_file(proc);
+    size_t size = assembly_file(proc);
 
 
     new_buf = proc->new_file_buf;
@@ -66,7 +66,7 @@ void fill_regs(Processor* proc)
     for (size_t i = 0; i < REG_AMT; i++)
     {
         reg[i].name = reg_names[i];
-        reg[i].value = start_value;
+        reg[i].value = START_VALUE;
     }
  
     for (size_t i = 0; i < REG_AMT; i++)
@@ -78,10 +78,10 @@ void fill_regs(Processor* proc)
 
 void fill_labels(Processor* proc)
 {
-    LabelParameters label[LABELS_AMT];
+    LabelParameters label[LABELS_AMT] = {};
 
     for (size_t i = 0; i < LABELS_AMT; i++)
-        label[i].target = start_value;
+        label[i].target = START_VALUE;
 
     for (size_t i = 0; i < LABELS_AMT; i++)
         proc->labels.labels[i].target = label[i].target;
@@ -90,16 +90,17 @@ void fill_labels(Processor* proc)
 
 void fill_RAM (Processor* proc)
 {
-    char array[RAM_AMT];
+    char array[RAM_AMT] = {};
+
     for (int i = 0; i < RAM_AMT; i++)
-        array[i] = start_value;
+        array[i] = START_VALUE;
 
     for(int i = 0; i < RAM_AMT; i++)
         proc->RAM[i] = array[i];
 
 }
 
-size_t asm_file(Processor* proc)
+size_t assembly_file(Processor* proc)
 {
     size_t out_cmd_amt = OUT_AMT;
     size_t out_cmd_num = 0;
@@ -392,7 +393,7 @@ void check_label(Processor* proc, char* str, int cmd_num, int* arg)
         for (size_t i = 0; i < 2; i++)
         {
             printf("target in proc%d, not %d\n", proc->labels.labels[i].target, label[i].target);
-            printf("name in proc %s, not %s\n", proc->labels.labels[i].name, label[i].name);
+            printf("name in proc \"%s\", not \"%s\"\n", proc->labels.labels[i].name, label[i].name);
         }
 
         for (size_t i = 0; i < LABELS_AMT; i++)

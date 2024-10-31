@@ -97,15 +97,15 @@ static const struct CommandParameters bunch_of_commands [CMD_AMT]  =    {PushStr
                                                                         JumpStr  ,
                                                                         PopStr   };
 
-void assembly (Text* input, Processor* proc, Stack* stk1);
+void assembly (Text* input, Processor* proc);
 void fill_labels(Labels* labels);
-void handle_commands(Labels* labels, Processor* proc, Text* input, Stack* stk1);
-void cmds(Labels* labels, Text* input, Stack* new_buf, Processor* proc, Stack* stk1);
-void args (Labels* labels, Text* input, size_t cmd, Stack* new_buf, Stack* stk1);
+void handle_commands(Labels* labels, Processor* proc, Text* input);
+void cmds(Labels* labels, Text* input, Stack* new_buf, Processor* proc);
+void args (Labels* labels, Text* input, size_t cmd, Stack* new_buf);
 void label_define(Labels* labels, size_t cmd_num, char* str);
 void label_arg(Labels* labels, size_t cmd_num, int* arg, char* str);
 bool find_label_mark (const char* const str);
-void push_pop_case (Stack* new_buf, Text* input, Processor* proc, size_t cmd, Stack* stk1);
+void push_pop_case (Stack* new_buf, Text* input, Processor* proc, size_t cmd);
 int arg_analysis (Text* input, int* arg1, int* arg2, Processor* proc);
 int RAM_case (Processor* proc, int* arg1, int* arg2, Text* input);
 int plus_case(Processor* proc, size_t* cmd_num, int* arg_value, Text* input);

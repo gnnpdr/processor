@@ -3,8 +3,8 @@
 
 #include "input.h"
 
-static const int CMD_AMT = 15;
-static const int start_value = -1;
+static const int CMD_AMT = 12;
+static const int START_VALUE = -1;
 static const int OUT_AMT = 100;
 
 enum CommandsNums
@@ -17,13 +17,10 @@ enum CommandsNums
     SQRT  = 6 ,
     SIN   = 7 ,
     COS   = 8 ,
-    DUMP  = 9 ,
-    OUT   = 10,
-    HLT   = 11,
-    JUMP  = 12,
-    POP   = 13,
-    POPR  = 14,
-    PUSHR = 15
+    OUT   = 9 ,
+    HLT   = 10,
+    JUMP  = 11,
+    POP   = 12
 };
 
 struct CommandParameters 
@@ -42,13 +39,10 @@ const struct CommandParameters DivStr   =  {.cmd_str = "div"  , .cmd_num = DIV  
 const struct CommandParameters SqrtStr  =  {.cmd_str = "sqrt" , .cmd_num = SQRT , .arg_amt = 1};
 const struct CommandParameters SinStr   =  {.cmd_str = "sin"  , .cmd_num = SIN  , .arg_amt = 1};
 const struct CommandParameters CosStr   =  {.cmd_str = "cos"  , .cmd_num = COS  , .arg_amt = 1};
-const struct CommandParameters DumpStr  =  {.cmd_str = "dump" , .cmd_num = DUMP , .arg_amt = 0};
 const struct CommandParameters HltStr   =  {.cmd_str = "hlt"  , .cmd_num = HLT  , .arg_amt = 0};
 const struct CommandParameters OutStr   =  {.cmd_str = "out"  , .cmd_num = OUT  , .arg_amt = 1};
 const struct CommandParameters JumpStr  =  {.cmd_str = "jump" , .cmd_num = JUMP , .arg_amt = 2};
 const struct CommandParameters PopStr   =  {.cmd_str = "pop"  , .cmd_num = POP  , .arg_amt = 3};
-const struct CommandParameters PushrStr =  {.cmd_str = "pushr", .cmd_num = PUSHR, .arg_amt = 1};
-const struct CommandParameters PoprStr  =  {.cmd_str = "popr" , .cmd_num = POPR , .arg_amt = 1};
 
 static const struct CommandParameters bunch_of_commands [CMD_AMT]  =    {PushStr,
                                                                         AddStr   ,
@@ -58,17 +52,14 @@ static const struct CommandParameters bunch_of_commands [CMD_AMT]  =    {PushStr
                                                                         SqrtStr  ,
                                                                         SinStr   ,
                                                                         CosStr   ,
-                                                                        DumpStr  ,
                                                                         HltStr   ,
                                                                         OutStr   ,
                                                                         JumpStr  ,
-                                                                        PopStr   ,
-                                                                        PushrStr ,
-                                                                        PoprStr };
+                                                                        PopStr   };
 
 #define SSCANF(file_buf, ...)   do                                                   \
                                 {                                                    \
-                                    cmd_num++;                                    \
+                                    cmd_num++;                                       \
                                     file_buf = proc->addresses[*cmd_num];            \
                                     sscanf (file_buf, __VA_ARGS__);                  \
                                 }while(0);
@@ -83,7 +74,7 @@ static const struct CommandParameters bunch_of_commands [CMD_AMT]  =    {PushStr
                                                 }while(0);
 
 
-void assembly (char* name, Processor* proc);
+void assembly_code (char* name, Processor* proc);
 
 void proc_dtor (Processor* proc, char* name);
 

@@ -1,0 +1,69 @@
+push 1
+push 2
+push 3
+pop cx
+pop bx
+pop ax
+push bx
+push bx
+mul
+push 4
+push ax
+push cx
+mul
+mul
+sub
+pop [0]
+push [0]
+push 0
+jump 0 zero_roots:
+push [0]
+push 0
+jump 1 one_root:
+push bx
+push -1
+mul
+push [0]
+push [0]
+sqrt
+add
+push 2
+push ax
+mul
+div
+push [1]
+push bx
+push -1
+mul
+push [0]
+push [0]
+sqrt
+add
+push 2
+push ax
+mul
+div
+push [2]
+pop [0]
+pop [1]
+pop [2]
+out
+out
+out
+one_root:
+push -1
+push bx
+mul
+push 2
+push ax
+mul
+div
+pop [1]
+push [0]
+push [1]
+out
+out
+zero_roots:
+push [0]
+out
+hlt
