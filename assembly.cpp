@@ -2,14 +2,33 @@
 
 #include "assembly.h"
 
+static void ctor_labels(Labels* labels);
+static void dtor_labels(Labels* labels);
+
+static void fill_labels(Labels* labels, Text* input);
+static bool find_label_mark (const char* const str);
+static bool find_jump (char* str);
+static int find_label(Labels* labels, char* str);
+
+static void handle_commands(Labels* labels, Text* input, Stack* new_buf);
+static void args (Labels* labels, Text* input, size_t cmd, Stack* new_buf);
+static void complicated_arg_case (Stack* new_buf, Text* input, size_t cmd);
+
+static int arg_analysis (Text* input, int* arg1, int* arg2);
+static void RAM_case (int* arg1, int* arg2, Text* input);
+static void plus_case(size_t* cmd_num, Text* input, int* arg2);
+
+static bool find_register (char* str, int* arg);
+
+
 void assembly (Text* input, Labels* labels, Stack* new_buf)
 {
     ctor_labels(labels);
     fill_labels(labels, input);
 
     handle_commands(labels, input, new_buf);
-  
-    labels_dtor(labels);
+
+    dtor_labels(labels);
 }
 
 void ctor_labels(Labels* labels)
@@ -32,7 +51,7 @@ void fill_labels(Labels* labels, Text* input)
 
     for (int word = 0; word < input->cmd_amt; word++)
     {
-        strcpy(str, buf[word]);
+        strcpy(str, buf[word]);  //вроде так должно работать, иначе можно сделать через sscanf
 
         is_label = find_label_mark(str);
 
@@ -84,7 +103,7 @@ bool find_jump (char* str)
 
 int find_label(Labels* labels, char* str)
 {
-    for (int i = 0; i < LABELS_AMT; i++) //лаги-баги, это константа...
+    for (int i = 0; i < LABELS_AMT; i++)
     {
         if (labels->labels[i].name == nullptr || strcmp(labels->labels[i].name, str) == 0)
             return i;
@@ -99,28 +118,6 @@ int find_label(Labels* labels, char* str)
 
 void handle_commands(Labels* labels, Text* input, Stack* new_buf)
 {
-    asm_cmds(labels, input, new_buf); 
-
-
-    proc->new_file_buf = new_buf;
-    int k = 0;
-
-    for (int i = 0; i < proc->new_file_buf.capacity; i++)
-        printf("%d ", proc->new_file_buf.data[i]);
-
-    /*while (proc->new_file_buf.data[k] != POISON)
-    {
-        printf("%d ", proc->new_file_buf.data[k]);
-        k++;
-    }*/
-
-
-
-    stk_dtor(&new_buf);
-}
-
-void asm_cmds(Labels* labels, Text* input, Stack* new_buf)
-{
     size_t cmd_amt = input->cmd_amt;
     char str [80] = "";
     char* file_buf;
@@ -132,7 +129,7 @@ void asm_cmds(Labels* labels, Text* input, Stack* new_buf)
         is_label = false;
         
         file_buf = input->addresses[cmd_num];
-        sscanf(file_buf, "%s", str);
+        sscanf(file_buf, "%s", str);  // вот не знаю,что лучше sscanf или strcpy
 
         is_label = find_label_mark(str);
         if (is_label == true)
@@ -146,13 +143,11 @@ void asm_cmds(Labels* labels, Text* input, Stack* new_buf)
             
                 if(strcmp("push", str) == 0 || strcmp("pop", str) == 0) //строковые константы, отдельная функция
                 {
-                    //printf("push\n");
-                    complicated_arg_case(new_buf, input, proc, cmd);
+                    complicated_arg_case(new_buf, input, cmd);
                     break;
                 }
 
                 args(labels, input, cmd, new_buf);
-                
                 break;
             }
             else if (cmd > CMD_AMT - 1)
@@ -162,29 +157,30 @@ void asm_cmds(Labels* labels, Text* input, Stack* new_buf)
         }
     }
     
-    return;
+    return; 
 }
 
 void args (Labels* labels, Text* input, size_t cmd, Stack* new_buf)
 {
     int arg = 0;
     char str[80] = "";
+    bool is_label = false;
+    int ind = 0;
 
     size_t cmd_num = input->cmd_num;
 
     for (size_t arg_num = 0; arg_num < bunch_of_commands[cmd].arg_amt; arg_num++) 
     {
+        is_label = false;
         cmd_num++; 
         char* file_buf = input->addresses[cmd_num];
         sscanf(file_buf, "%s", str);
-        
 
-        find_label_mark(str);
-        if (labels->is_label == true)
+        is_label = find_label_mark(str);
+        if (is_label == true)
         {
-            label_arg(labels, cmd_num, &arg, str);
-            stk_push(new_buf, arg);
-            return;
+            ind = find_label(labels, str);              //сделать на джампы 1 аргумент
+            stk_push(new_buf, labels->labels[ind].target);
         }         
         else
         {
@@ -196,82 +192,13 @@ void args (Labels* labels, Text* input, size_t cmd, Stack* new_buf)
     return;
 }
 
-void label_define(Labels* labels, size_t cmd_num, char* str)
+void complicated_arg_case (Stack* new_buf, Text* input, size_t cmd)  //надо еще посмотреть, что тут с cmd_num
 {
-    LabelParameters* label = labels->labels;
-
-    for (size_t i = 0; i < LABELS_AMT; i++)
-    {
-        if (label[i].target == -1 && label[i].name == nullptr)
-        {
-            label[i].target = cmd_num;
-            label[i].name = str;
-
-        }
-
-        else if (label[i].target == -1 && strcmp(label[i].name, str) == 0)
-        {
-            label[i].target = cmd_num;
-        }
-
-        if (i >= LABELS_AMT - 1 && label[i].target != -1)
-        {
-            printf ("no place for new label\n");
-            return;
-        }
-                
-        break;
-    }
-
-    labels->labels = label;
-
-    return;
-}
-
-void label_arg(Labels* labels, size_t cmd_num, int* arg, char* str)
-{
-    LabelParameters* label = labels->labels;
-
-    for (size_t i = 0; i < LABELS_AMT; i++)
-    {
-        if (label[i].target != START_VALUE && strcmp(label[i].name, str) == 0)  //отдельно strcmp
-        {
-            *arg = label[i].target;
-        }
-                    
-        else if (label[i].target == START_VALUE && strcmp(label[i].name, str) == 0)
-        {
-            label[i].target = cmd_num;
-            *arg = label[i].target;
-        }
-
-        if (i >= LABELS_AMT - 1 && label[i].name != nullptr)
-        {
-            printf("there is no such label\n");
-            return;
-        }
-
-        break;
-    }
-    labels->labels = label;
-
-    return;
-}
-
-
-
-void push_pop_case (Stack* new_buf, Text* input, Processor* proc, size_t cmd)
-{
-    printf("this case\n");
     int arg1 = POISON;
     int arg2 = POISON;
 
-    int arg_value = arg_analysis(input, &arg1, &arg2, proc);
-    printf("arg value %d\n", arg_value);
-    printf("arg1 %d\n", arg1);
-    printf("arg2 %d\n", arg2);
+    arg_analysis(input, &arg1, &arg2);
 
-    stk_push(new_buf, arg_value);
 
     if (arg1 != POISON)
     {
@@ -286,82 +213,75 @@ void push_pop_case (Stack* new_buf, Text* input, Processor* proc, size_t cmd)
 }
 
 
-int arg_analysis (Text* input, int* arg1, int* arg2, Processor* proc)
+int arg_analysis (Text* input, int* arg1, int* arg2)
 {
-    int arg_value = 0;
     size_t cmd_num = input->cmd_num;
     char str[80] = "";
+    bool is_register = find_register(str, arg1);
 
     cmd_num++;
     char* file_buf = input->addresses[cmd_num];
-    
     int ind = sscanf (file_buf, "%s", str); 
     
     if (strcmp(str, "[") == 0)
     {
-        RAM_case(proc, arg1, arg2, input);
+        RAM_case(arg1, arg2, input);
     }
-    else if (str[1] == 'x')     //функция проверки на регистр
+    else if (is_register == true)
     {
-        *arg1 = find_register(proc, str);
-        arg_value += 2;
+        *arg1 = (*arg1 | (1 >> sizeof(int)*8 - 2));
         cmd_num++;
     }
     else if (ind == 1)
     {
-        sscanf(file_buf, "%d", arg1); //записать тип в число побитовыми сдвигами
-        //printf("buf %s\n", file_buf);
-        arg_value += 1;
-        printf("arg 1 in an %d\n", *arg1);
+        sscanf(file_buf, "%d", arg1);
 
         cmd_num++;
-        
         file_buf = input->addresses[cmd_num];
         sscanf (file_buf, "%s", str); 
 
         if (strcmp(str, "+") == 0)
-            *arg2 = plus_case(proc, &cmd_num, &arg_value, input);
+             plus_case(&cmd_num, input, arg2);
     }
-    else if (ind == 0)   // распространение на случай pop 
+    else if (ind == 0)
     {
-        arg_value += 0;
         cmd_num++;
     }
 
     cmd_num--;
     input->cmd_num = cmd_num;
-
-    return arg_value;
 }
 
-int RAM_case (Processor* proc, int* arg1, int* arg2, Text* input)
+void RAM_case (int* arg1, int* arg2, Text* input)
 {
-    int arg_value = 0;
-    arg_value += 4;
-    char str[80] = "";
+    *arg1 = (*arg1 | (1 >> sizeof(int)*8 - 3));
+    
 
     size_t cmd_num = input->cmd_num;
+    char str[80] = "";
+    bool is_register = find_register(str, arg1);
 
     cmd_num++;
     char* file_buf = input->addresses[cmd_num];
     sscanf (file_buf, "%s", str); 
 
-    if (str[1] == 'x' && strlen(str) == 2)
-    {
-        *arg1 = find_register(proc, str);
-        arg_value += 2;
-    }
+    if (is_register == true)
+        *arg1 = (*arg1 | (1 >> sizeof(int)*8 - 2));
+
     else
     {
         sscanf(file_buf, "%d", arg1);
-        arg_value += 1;
+        *arg1 = (*arg1 | (1 >> sizeof(int)*8 - 1));
 
         cmd_num++;
         file_buf = input->addresses[cmd_num];
         sscanf (file_buf, "%s", str);
 
         if (strcmp(str, "+") == 0)
-        *arg2 = plus_case(proc, &cmd_num, &arg_value, input);
+        {
+            plus_case(&cmd_num, input, arg2);
+            *arg2 = (*arg2 | (1 >> sizeof(int)*8 - 3));
+        }
     }
 
     cmd_num++;
@@ -371,39 +291,69 @@ int RAM_case (Processor* proc, int* arg1, int* arg2, Text* input)
     cmd_num++;
 
     input->cmd_num = cmd_num;
-
-    return arg_value;
 }
 
-int plus_case(Processor* proc, size_t* cmd_num, int* arg_value, Text* input)
+void plus_case(size_t* cmd_num, Text* input, int* arg2)
 {
-    int arg2 = 0;
     char str[80] = "";
     char* file_buf = input->addresses[*cmd_num];
 
-    *arg_value += 2;
 
     (*cmd_num)++;
     file_buf = input->addresses[*cmd_num];
     sscanf (file_buf, "%s", str);
-    arg2 = find_register(proc, str);
 
-    return arg2;
+    find_register(str, arg2);
+    *arg2 = (*arg2 | (1 >> sizeof(int)*8 - 2));
 }
 
-int find_register (Processor* proc, char* str)  //статический массив, вынести из процессора
+bool find_register (char* str, int* arg)  //статический массив, вынести из процессора
 {
+    bool is_register = false;
+
     for (int i = 0; i < REG_AMT; i++)
     {
-        if (strcmp(proc->registers[i].name, str) == 0)
-            return i + 1;
+        if (strcmp(registers[i].name, str) == 0)
+        {
+            is_register = true;
+            *arg = i + 1;
+            return is_register;
+        } 
     }
 
     printf("there is no such register\n");
-    return POISON;
+
+    return is_register;
 }
 
-void labels_dtor(Labels* labels)
+void dtor_labels(Labels* labels)
 {
     free(labels->labels);
+}
+
+
+void make_file (Stack* new_buf)
+{
+    int* stack_buf = new_buf->data;
+    int* file_buf = (int*)calloc(new_buf->capacity, sizeof(int));
+    int file_size = 0;
+
+    while(stack_buf[file_size] != POISON)
+    {
+        file_buf[file_size] = stack_buf[file_size];
+        file_size++;
+    }
+
+    file_buf = (int*)realloc(file_buf, sizeof(int)*file_size);
+
+    FILE* output_file;
+    output_file = fopen("out.txt", "a");
+    FILE_CHECK(output_file)
+
+    for (int cmd_num = 0; cmd_num < file_size; cmd_num++)
+        fprintf(output_file, "%d ", file_buf[cmd_num]);
+
+    fclose(output_file);
+
+    free(file_buf);
 }

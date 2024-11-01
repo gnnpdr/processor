@@ -39,7 +39,7 @@ struct Text
 
 
 void get_name(Text* input, char** argv);
-void get_file(Text* input);
+void get_file_data(Text* input);
 size_t find_file_size (char* name);
 void remove_carriage(Text* input);
 void input_dtor (Text* input);

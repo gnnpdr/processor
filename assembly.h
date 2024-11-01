@@ -8,12 +8,11 @@ static const int START_VALUE = -1;
 static const int OUT_AMT = 100;
 
 static const size_t LABELS_AMT = 10;
-static const size_t REG_AMT = 5;
+static const size_t REG_AMT = 4;
 static const size_t RAM_AMT = 50;
 
 static const char LABEL_MARK = ':';
 static const char COMMENT_MARK = ';';
-
 
 enum LabelType
 {
@@ -39,17 +38,16 @@ struct RegisterParameters
     char* name;
 };
 
+struct RegisterParameters ax = {.value = START_VALUE, .name = "ax"};
+struct RegisterParameters bx = {.value = START_VALUE, .name = "bx"};
+struct RegisterParameters cx = {.value = START_VALUE, .name = "cx"};
+struct RegisterParameters ex = {.value = START_VALUE, .name = "ex"};
 
-struct Processor
-{
-    Stack new_file_buf;
+struct RegisterParameters registers [REG_AMT] = { ax,
+                                                  bx,
+                                                  cx,
+                                                  ex };
 
-    RegisterParameters registers[REG_AMT];
-    
-    size_t ip;
-
-    int RAM[RAM_AMT];
-};
 
 enum CommandsNums
 {
@@ -88,32 +86,19 @@ const struct CommandParameters OutStr   =  {.cmd_str = "out"  , .cmd_num = OUT  
 const struct CommandParameters JumpStr  =  {.cmd_str = "jump" , .cmd_num = JUMP , .arg_amt = 2};
 const struct CommandParameters PopStr   =  {.cmd_str = "pop"  , .cmd_num = POP  , .arg_amt = 3};
 
-static const struct CommandParameters bunch_of_commands [CMD_AMT]  =    {PushStr,
-                                                                        AddStr   ,
-                                                                        SubStr   ,
-                                                                        MulStr   ,
-                                                                        DivStr   ,
-                                                                        SqrtStr  ,
-                                                                        SinStr   ,
-                                                                        CosStr   ,
-                                                                        HltStr   ,
-                                                                        OutStr   ,
-                                                                        JumpStr  ,
-                                                                        PopStr   };
+static const CommandParameters bunch_of_commands [CMD_AMT]  =   {PushStr,
+                                                                AddStr   ,
+                                                                SubStr   ,
+                                                                MulStr   ,
+                                                                DivStr   ,
+                                                                SqrtStr  ,
+                                                                SinStr   ,
+                                                                CosStr   ,
+                                                                HltStr   ,
+                                                                OutStr   ,
+                                                                JumpStr  ,
+                                                                PopStr   };
 
-void assembly (Text* input, Labels* labels);
-void fill_labels(Labels* labels);
-void handle_commands(Labels* labels, Processor* proc, Text* input);
-void cmds(Labels* labels, Text* input, Stack* new_buf, Processor* proc);
-void args (Labels* labels, Text* input, size_t cmd, Stack* new_buf);
-void label_define(Labels* labels, size_t cmd_num, char* str);
-void label_arg(Labels* labels, size_t cmd_num, int* arg, char* str);
-bool find_label_mark (const char* const str);
-void push_pop_case (Stack* new_buf, Text* input, Processor* proc, size_t cmd);
-int arg_analysis (Text* input, int* arg1, int* arg2, Processor* proc);
-int RAM_case (Processor* proc, int* arg1, int* arg2, Text* input);
-int plus_case(Processor* proc, size_t* cmd_num, int* arg_value, Text* input);
-int find_register (Processor* proc, char* str);
-void labels_dtor(Labels* labels);
-
+void assembly (Text* input, Labels* labels, Stack* new_buf);
+void make_file (Stack* new_buf);
 #endif //_ASM_H_

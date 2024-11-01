@@ -15,7 +15,7 @@ void get_name(Text* input, char** argv)
     return;
 }
 
-void get_file(Text* input)
+void get_file_data(Text* input)  //может, можно унифицировать эту функцию?
 {
     FILE* file; 
     file = fopen(input->name, "rb");

@@ -18,10 +18,11 @@ int main (int argc, char** argv)
     Stack new_buf = {};
     stk_ctor(&new_buf);
 
-    assembly(&input, &labels);
+    assembly(&input, &labels, &new_buf);
+
+    make_file(&new_buf);
 
     Processor proc = {};
 
     input_dtor(&input);
-    stk_dtor(&(proc.new_file_buf));
 }

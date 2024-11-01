@@ -1,4 +1,4 @@
-/*#include <stdio.h>
+#include <stdio.h>
 
 #include "proc.h"
 
@@ -26,43 +26,43 @@ void proc_code (Stack* const stk, Processor* const proc, Errors* const err)
         {
             case PUSH:
                 proc->ip = ip;
-                stk_push (stk, get_arg(proc), err);   //получается, чтобы добавить указатели на эти функции, надо определить их раньше структуры с командами, это задолго до этого файла, стоит ли тогда добавлять из в структуру?
+                stk_push (stk, get_arg(proc));   //получается, чтобы добавить указатели на эти функции, надо определить их раньше структуры с командами, это задолго до этого файла, стоит ли тогда добавлять из в структуру?
                 ip = proc->ip;                  //да и вообще, сделать один тайпдэф на них нельзя, так что будет очень некрасиво 
                 break;
 
             case ADD:
                 TWO_ARGS
-                stk_push (stk, first_el + sec_el, err);
+                stk_push (stk, first_el + sec_el);
                 break;
 
             case SUB:
                 TWO_ARGS
-                stk_push (stk, first_el - sec_el, err);
+                stk_push (stk, first_el - sec_el);
                 break;
 
             case MUL:
                 TWO_ARGS
-                stk_push (stk, first_el * sec_el, err);
+                stk_push (stk, first_el * sec_el);
                 break;
 
             case DIV:
                 TWO_ARGS
-                stk_push (stk, first_el / sec_el, err);
+                stk_push (stk, first_el / sec_el);
                 break;
 
             case SQRT:
                 ONE_ARG
-                stk_push (stk, pow(arg, 0.5), err);
+                stk_push (stk, pow(arg, 0.5));
                 break;
                 
             case SIN:
                 ONE_ARG
-                stk_push (stk, sin(arg), err);
+                stk_push (stk, sin(arg));
                 break;
 
             case COS:
                 ONE_ARG
-                stk_push (stk, cos(arg), err);
+                stk_push (stk, cos(arg));
                 break;
 
             case OUT:
@@ -71,13 +71,13 @@ void proc_code (Stack* const stk, Processor* const proc, Errors* const err)
             
             case JUMP:
                 proc->ip = ip;
-                jump(proc, stk, err);
+                jump(proc, stk);
                 ip = proc->ip;
                 break;
 
             case POP:
                 proc->ip = ip;
-                stk_pop (stk, get_arg_addr(proc, &arg), err);
+                stk_pop (stk, get_arg_addr(proc, &arg));
                 ip = proc->ip;
                 break;
 
@@ -270,6 +270,3 @@ void jump (Processor* const proc, Stack* const stk, Errors* const err)
         proc->ip = new_ip;
     }
 }
-
-
-*/
