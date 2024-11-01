@@ -347,11 +347,10 @@ void make_file (Stack* new_buf)
     file_buf = (int*)realloc(file_buf, sizeof(int)*file_size);
 
     FILE* output_file;
-    output_file = fopen("out.txt", "a");
+    output_file = fopen("out.txt", "wb");  //это же так делается? Хочется, чтобы выходной файл был с битами
     FILE_CHECK(output_file)
 
-    for (int cmd_num = 0; cmd_num < file_size; cmd_num++)
-        fprintf(output_file, "%d ", file_buf[cmd_num]);
+    fwrite (file_buf, file_size, sizeof(int), output_file);
 
     fclose(output_file);
 
