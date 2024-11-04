@@ -7,7 +7,7 @@
 void get_name(Text* input, char** argv)
 {
     char* name = (char*)calloc(strlen(argv[1]), sizeof(char));
-    ALOCATION_CHECK(*name)
+    ALLOCATION_CHECK(*name)
     
     strcpy(name, argv[1]);
     input->name = name;
@@ -24,10 +24,10 @@ void get_file_data(Text* input)  //может, можно унифицирова
     size_t size = find_file_size(input->name);
 
     char* file_buf = (char*)calloc(size, sizeof(char));
-    ALOCATION_CHECK(file_buf)
+    ALLOCATION_CHECK(file_buf)
 
     fread(file_buf, sizeof(char), size, file);
-    ALOCATION_CHECK(file_buf)
+    ALLOCATION_CHECK(file_buf)
 
     fclose(file);
 
@@ -76,6 +76,14 @@ void remove_carriage(Text* input)
 
         else if (*ch == '\r')
             *ch = '\0';
+
+        else if (*ch == COMMENT_MARK)
+        {
+            do              //просто не будет записывать комментарии
+                symb_num++;
+            while (*ch != '\n');
+            
+        }
         
         else if (*ch == '\n')
         {

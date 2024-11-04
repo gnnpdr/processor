@@ -11,7 +11,7 @@ int main (int argc, char** argv)
     Text input = {};
 
     get_name(&input, argv);
-    get_file(&input);
+    get_file_data(&input);
     remove_carriage(&input);
 
     Labels labels = {};

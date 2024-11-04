@@ -14,7 +14,7 @@ static void handle_commands(Labels* labels, Text* input, Stack* new_buf);
 static void args (Labels* labels, Text* input, size_t cmd, Stack* new_buf);
 static void complicated_arg_case (Stack* new_buf, Text* input, size_t cmd);
 
-static int arg_analysis (Text* input, int* arg1, int* arg2);
+static void arg_analysis (Text* input, int* arg1, int* arg2);
 static void RAM_case (int* arg1, int* arg2, Text* input);
 static void plus_case(size_t* cmd_num, Text* input, int* arg2);
 
@@ -52,7 +52,7 @@ void fill_labels(Labels* labels, Text* input)
     for (int word = 0; word < input->cmd_amt; word++)
     {
         strcpy(str, buf[word]);  //вроде так должно работать, иначе можно сделать через sscanf
-
+        
         is_label = find_label_mark(str);
 
         if (is_label == true)
@@ -109,10 +109,8 @@ int find_label(Labels* labels, char* str)
             return i;
     }
 
-    return -1; //можно ошибку добавить
+    return -1;
 }
-
-
 
 
 
@@ -129,7 +127,7 @@ void handle_commands(Labels* labels, Text* input, Stack* new_buf)
         is_label = false;
         
         file_buf = input->addresses[cmd_num];
-        sscanf(file_buf, "%s", str);  // вот не знаю,что лучше sscanf или strcpy
+        sscanf(file_buf, "%s", str);
 
         is_label = find_label_mark(str);
         if (is_label == true)
@@ -140,7 +138,7 @@ void handle_commands(Labels* labels, Text* input, Stack* new_buf)
             if (strcmp(str, bunch_of_commands[cmd].cmd_str) == 0)
             {
                 stk_push(new_buf, bunch_of_commands[cmd].cmd_num);
-            
+                
                 if(strcmp("push", str) == 0 || strcmp("pop", str) == 0) //строковые константы, отдельная функция
                 {
                     complicated_arg_case(new_buf, input, cmd);
@@ -179,7 +177,7 @@ void args (Labels* labels, Text* input, size_t cmd, Stack* new_buf)
         is_label = find_label_mark(str);
         if (is_label == true)
         {
-            ind = find_label(labels, str);              //сделать на джампы 1 аргумент
+            ind = find_label(labels, str);
             stk_push(new_buf, labels->labels[ind].target);
         }         
         else
@@ -199,6 +197,15 @@ void complicated_arg_case (Stack* new_buf, Text* input, size_t cmd)  //надо 
 
     arg_analysis(input, &arg1, &arg2);
 
+    /*bool is_stk_pop = arg_analysis(input, &arg1, &arg2);
+
+    if (is_stk_pop = true)  //чтобы отличить случай, когда это просто pop для стэка. Если не поставить метку, отличить от след команды невозможно
+    {
+        int pop_cmd = 0;
+        stk_pop(new_buf, &pop_cmd);
+        pop_cmd |= STK;
+        stk_push(new_buf, pop_cmd);
+    }*/
 
     if (arg1 != POISON)
     {
@@ -208,12 +215,9 @@ void complicated_arg_case (Stack* new_buf, Text* input, size_t cmd)  //надо 
     {
         stk_push(new_buf, arg2);
     }
-
-    return;
 }
 
-
-int arg_analysis (Text* input, int* arg1, int* arg2)
+void arg_analysis (Text* input, int* arg1, int* arg2)
 {
     size_t cmd_num = input->cmd_num;
     char str[80] = "";
@@ -222,6 +226,7 @@ int arg_analysis (Text* input, int* arg1, int* arg2)
     cmd_num++;
     char* file_buf = input->addresses[cmd_num];
     int ind = sscanf (file_buf, "%s", str); 
+    //bool is_stk_pop = false;
     
     if (strcmp(str, "[") == 0)
     {
@@ -229,7 +234,7 @@ int arg_analysis (Text* input, int* arg1, int* arg2)
     }
     else if (is_register == true)
     {
-        *arg1 = (*arg1 | (1 >> sizeof(int)*8 - 2));
+        *arg1 |= REG;
         cmd_num++;
     }
     else if (ind == 1)
@@ -241,20 +246,23 @@ int arg_analysis (Text* input, int* arg1, int* arg2)
         sscanf (file_buf, "%s", str); 
 
         if (strcmp(str, "+") == 0)
-             plus_case(&cmd_num, input, arg2);
+            plus_case(&cmd_num, input, arg2);
     }
     else if (ind == 0)
     {
+        //is_stk_pop = true;
         cmd_num++;
     }
 
     cmd_num--;
     input->cmd_num = cmd_num;
+
+    //return is_stk_pop;
 }
 
 void RAM_case (int* arg1, int* arg2, Text* input)
 {
-    *arg1 = (*arg1 | (1 >> sizeof(int)*8 - 3));
+    *arg1 |= RAM;
     
 
     size_t cmd_num = input->cmd_num;
@@ -266,12 +274,12 @@ void RAM_case (int* arg1, int* arg2, Text* input)
     sscanf (file_buf, "%s", str); 
 
     if (is_register == true)
-        *arg1 = (*arg1 | (1 >> sizeof(int)*8 - 2));
+        *arg1 |= REG;
 
     else
     {
         sscanf(file_buf, "%d", arg1);
-        *arg1 = (*arg1 | (1 >> sizeof(int)*8 - 1));
+        *arg1 |= INT;
 
         cmd_num++;
         file_buf = input->addresses[cmd_num];
@@ -280,7 +288,7 @@ void RAM_case (int* arg1, int* arg2, Text* input)
         if (strcmp(str, "+") == 0)
         {
             plus_case(&cmd_num, input, arg2);
-            *arg2 = (*arg2 | (1 >> sizeof(int)*8 - 3));
+            *arg2 |= RAM;
         }
     }
 
@@ -304,7 +312,7 @@ void plus_case(size_t* cmd_num, Text* input, int* arg2)
     sscanf (file_buf, "%s", str);
 
     find_register(str, arg2);
-    *arg2 = (*arg2 | (1 >> sizeof(int)*8 - 2));
+    *arg2 |= REG;
 }
 
 bool find_register (char* str, int* arg)  //статический массив, вынести из процессора
@@ -350,7 +358,7 @@ void make_file (Stack* new_buf)
     output_file = fopen("out.txt", "wb");  //это же так делается? Хочется, чтобы выходной файл был с битами
     FILE_CHECK(output_file)
 
-    fwrite (file_buf, file_size, sizeof(int), output_file);
+    fwrite (file_buf, sizeof(int), file_size, output_file);  //если сильно захочется, можно прочитать, переписав в нормальный файл с помощью getc
 
     fclose(output_file);
 

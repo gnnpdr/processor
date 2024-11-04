@@ -3,7 +3,8 @@
 
 #include "input.h"
 
-static const int CMD_AMT = 12;
+static const int BITS_IN_BYTES = 8;
+static const int CMD_AMT = 16;
 static const int START_VALUE = -1;
 static const int OUT_AMT = 100;
 
@@ -12,7 +13,6 @@ static const size_t REG_AMT = 4;
 static const size_t RAM_AMT = 50;
 
 static const char LABEL_MARK = ':';
-static const char COMMENT_MARK = ';';
 
 enum LabelType
 {
@@ -61,8 +61,12 @@ enum CommandsNums
     COS   = 8 ,
     OUT   = 9 ,
     HLT   = 10,
-    JUMP  = 11,
-    POP   = 12
+    POP   = 11,
+    JA    = 12,
+    JAE   = 13,
+    JE    = 14,
+    JNE   = 15,
+    JMP   = 16
 };
 
 struct CommandParameters 
@@ -72,8 +76,17 @@ struct CommandParameters
     size_t       arg_amt;
 };
 
+enum ArgType
+{
+    INT = 1 >> sizeof(int)*BITS_IN_BYTES,  //вот их то и используем как маски
+    REG = 2 >> sizeof(int)*BITS_IN_BYTES,
+    RAM = 4 >> sizeof(int)*BITS_IN_BYTES,
+    FREE = ~(7 >> sizeof(int)*BITS_IN_BYTES),  //снимает маску
+    //STK = 8 >> sizeof(int)*BITS_IN_BYTES
+};
 
-const struct CommandParameters PushStr  =  {.cmd_str = "push" , .cmd_num = PUSH , .arg_amt = 3};
+
+const struct CommandParameters PushStr  =  {.cmd_str = "push" , .cmd_num = PUSH , .arg_amt = 2};
 const struct CommandParameters AddStr   =  {.cmd_str = "add"  , .cmd_num = ADD  , .arg_amt = 0};
 const struct CommandParameters SubStr   =  {.cmd_str = "sub"  , .cmd_num = SUB  , .arg_amt = 0};
 const struct CommandParameters MulStr   =  {.cmd_str = "mul"  , .cmd_num = MUL  , .arg_amt = 0};
@@ -83,8 +96,12 @@ const struct CommandParameters SinStr   =  {.cmd_str = "sin"  , .cmd_num = SIN  
 const struct CommandParameters CosStr   =  {.cmd_str = "cos"  , .cmd_num = COS  , .arg_amt = 1};
 const struct CommandParameters HltStr   =  {.cmd_str = "hlt"  , .cmd_num = HLT  , .arg_amt = 0};
 const struct CommandParameters OutStr   =  {.cmd_str = "out"  , .cmd_num = OUT  , .arg_amt = 1};
-const struct CommandParameters JumpStr  =  {.cmd_str = "jump" , .cmd_num = JUMP , .arg_amt = 2};
-const struct CommandParameters PopStr   =  {.cmd_str = "pop"  , .cmd_num = POP  , .arg_amt = 3};
+const struct CommandParameters PopStr   =  {.cmd_str = "pop"  , .cmd_num = POP  , .arg_amt = 2};
+const struct CommandParameters JaStr    =  {.cmd_str = "ja"   , .cmd_num = JA   , .arg_amt = 1};
+const struct CommandParameters JaeStr   =  {.cmd_str = "jae"  , .cmd_num = JAE  , .arg_amt = 1};
+const struct CommandParameters JeStr    =  {.cmd_str = "je"   , .cmd_num = JE   , .arg_amt = 1};
+const struct CommandParameters JneStr   =  {.cmd_str = "jne"  , .cmd_num = JNE  , .arg_amt = 1};
+const struct CommandParameters JmpStr   =  {.cmd_str = "jmp"  , .cmd_num = JMP  , .arg_amt = 1};
 
 static const CommandParameters bunch_of_commands [CMD_AMT]  =   {PushStr,
                                                                 AddStr   ,
@@ -96,9 +113,14 @@ static const CommandParameters bunch_of_commands [CMD_AMT]  =   {PushStr,
                                                                 CosStr   ,
                                                                 HltStr   ,
                                                                 OutStr   ,
-                                                                JumpStr  ,
-                                                                PopStr   };
+                                                                PopStr   ,
+                                                                JaStr    ,
+                                                                JaeStr   ,
+                                                                JeStr    ,
+                                                                JneStr   ,
+                                                                JmpStr   };
 
 void assembly (Text* input, Labels* labels, Stack* new_buf);
 void make_file (Stack* new_buf);
+
 #endif //_ASM_H_

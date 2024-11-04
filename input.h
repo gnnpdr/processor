@@ -4,6 +4,8 @@
 
 static const size_t MAX_CMD_AMT = 100;
 
+static const char COMMENT_MARK = ';';
+
 struct Text 
 {
     char* name;
@@ -19,7 +21,7 @@ struct Text
     size_t cmd_num;
 };
 
-#define ALOCATION_CHECK(buf) do                                      \
+#define ALLOCATION_CHECK(buf) do                                      \
                             {                                       \
                                 if (&buf == 0)                       \
                                 {                                   \

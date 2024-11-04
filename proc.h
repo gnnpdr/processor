@@ -5,7 +5,9 @@
 
 struct Processor
 {
-    int new_file_buf;
+    int* new_file_buf;
+
+    int ncmd;
     
     size_t ip;
 
@@ -13,13 +15,6 @@ struct Processor
 };
 
 static const size_t JUMP_AMT = 6;
-enum ArgType
-{
-    NULL_ = 0,
-    INT = 1,
-    REG = 2,
-    RAM = 4
-};
 
 enum ResultOfComparing
 {
@@ -37,7 +32,7 @@ enum DoJump
     NO_JUMP
 };
 
-#define TWO_ARGS        stk_pop(stk, &sec_el);                 \
+#define TWO_ARGS        stk_pop(stk, &sec_el);                      \
                         stk_pop(stk, &first_el);
 
 #define ONE_ARG         ip++;                                       \
@@ -52,7 +47,7 @@ enum DoJump
                         stack_element_t first_el = 0;               \
                         stack_element_t sec_el = 0;                 \
                                                                     \
-                        stk_pop(stk, &sec_el);                 \
+                        stk_pop(stk, &sec_el);                      \
                         stk_pop(stk, &first_el);   
 
 typedef DoJump (*comparator_t) (int first_el, int sec_el);
@@ -63,6 +58,6 @@ struct JumpParameters
     comparator_t comparator;
 };
 
-void proc_code (Stack* const stk, Processor* const proc, Errors* const err);
+void proc_file (Stack* const stk, Processor* const proc);
 
 #endif //_PROC_H_
