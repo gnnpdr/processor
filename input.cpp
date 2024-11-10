@@ -4,41 +4,57 @@
 
 #include "input.h"
 
-void get_name(Text* input, char** argv)
+
+Errors get_name(Text *const input, char **const argv)
 {
+    assert(input);
+    assert(argv);
+
     char* name = (char*)calloc(strlen(argv[1]), sizeof(char));
     ALLOCATION_CHECK(*name)
     
-    strcpy(name, argv[1]);
+    strncpy(name, argv[1], strlen(argv[1]) + 1);
     input->name = name;
 
-    return;
+    return ALL_RIGHT;
 }
 
-void get_file_data(Text* input)  //может, можно унифицировать эту функцию?
+
+Errors get_file_data(Text *const input)  //может, можно унифицировать эту функцию?
 {
+    assert(input);
+
     FILE* file; 
     file = fopen(input->name, "rb");
     FILE_CHECK(file)
-
+    //printf("wow 1\n");
     size_t size = find_file_size(input->name);
 
     char* file_buf = (char*)calloc(size, sizeof(char));
     ALLOCATION_CHECK(file_buf)
+    //printf("wow 2\n");
+    size_t read_result = fread(file_buf, sizeof(char), size, file);
+    if (read_result != size)
+    {
+        fputs("Ошибка чтения", stderr);
+        return READ_ERROR;
+    }
+    //printf("wow 3\n");
+    if(fclose(file) != 0)
+        return CLOSE_ERROR;
 
-    fread(file_buf, sizeof(char), size, file);
-    ALLOCATION_CHECK(file_buf)
-
-    fclose(file);
-
+    //printf("wow 4\n");
     input->file_buf = file_buf;
     input->init_file_size = size;
 
-    return;
+    return ALL_RIGHT;
 }
 
-size_t find_file_size (char* name)
+
+size_t find_file_size (const char *const name)
 {
+    assert(name);
+
     struct stat file_info;
 
     if (stat(name, &file_info) == -1)
@@ -50,7 +66,8 @@ size_t find_file_size (char* name)
     return file_info.st_size;
 }
 
-void remove_carriage(Text* input)
+
+void remove_carriage(Text *const input)
 {
     size_t symb_num = 0;
     size_t word_cnt = 0;
@@ -60,8 +77,6 @@ void remove_carriage(Text* input)
     char** addresses = input->addresses;
 
     addresses[word_cnt] = buf + symb_num;
-
-    int str = 0;
 
     while (symb_num < size)
     {
@@ -79,10 +94,9 @@ void remove_carriage(Text* input)
 
         else if (*ch == COMMENT_MARK)
         {
-            do              //просто не будет записывать комментарии
+            do
                 symb_num++;
             while (*ch != '\n');
-            
         }
         
         else if (*ch == '\n')
@@ -95,7 +109,7 @@ void remove_carriage(Text* input)
         symb_num++;
     }
 
-    for (int i = 0; i < word_cnt; i++)
+    for (size_t i = 0; i < word_cnt; i++)
         input->addresses[i] = addresses[i]; 
 
     input->file_buf = buf;
@@ -104,6 +118,8 @@ void remove_carriage(Text* input)
 
 void input_dtor (Text* input)
 {
+    assert(input);
+
     free(input->name);
     free(input->file_buf);
 }

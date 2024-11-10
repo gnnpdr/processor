@@ -33,7 +33,7 @@ enum Errors
 {
     ALL_RIGHT,
     NO_PLACE,
-    LOCATION_ERROR,
+    ALLOCATION_ERROR,
     PROBLEM,
     BUFFER_OVERFLOW,
     HASH_PROBLEM,
@@ -41,7 +41,11 @@ enum Errors
     UNKNOWN,
     FILE_PROBLEM,
     PLACE_PROBLEM,
-    SYN_PROBLEM
+    SYN_ERROR,
+    READ_ERROR,
+    CLOSE_ERROR,
+    SSCANF_ERROR,
+    WRITE_ERROR
 };
 
 #ifdef DEBUG

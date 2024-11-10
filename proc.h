@@ -7,7 +7,7 @@ struct Processor
 {
     int* new_file_buf;
 
-    int ncmd;
+    size_t ncmd;
     
     size_t ip;
 

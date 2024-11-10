@@ -14,7 +14,7 @@ void stk_ctor(Stack* stk)
     stk->capacity = stk_amount;
     size_t capacity = stk->capacity;
     stack_element_t* data = stk->data;
-    printf("cap %d\n", stk->capacity);
+    printf("cap %lld\n", stk->capacity);
 
     data = (stack_element_t*)calloc(capacity CANARY_CAPACITY_ADD, sizeof(stack_element_t));
     if (data == nullptr)
@@ -101,18 +101,19 @@ void stk_push(Stack* stk, stack_element_t element)
     stk->hash = stk_hash(stk);
     #endif
 
-    printf("\n\n");
-    for (int i = 0; i < stk->capacity; i++)
+    /*printf("\n\n");
+    for (size_t i = 0; i < stk->capacity; i++)
     {
-        printf("%d\n", i); 
+        printf("%lld\n", i); 
         printf("%d\n", stk->data[i]);
         printf("%p\n", stk->data + i);
     }
-    printf("\n\n");
+    printf("\n\n");*/
 
     printf("\n\n");
-    for (int i = 0; i < stk->capacity; i++)
+    for (size_t i = 0; i < stk->capacity; i++)
             printf("%d ", stk->data[i]);
+    printf("\n");
 
     //CHECK_STK(stk, err)
     return;
@@ -135,10 +136,10 @@ void change_capacity(Stack* stk, size_t new_capacity, size_t capacity)
 
     if (new_capacity > capacity)
     {
-        for (size_t i = 0; i <= capacity LEFT_CANARY_ADD; i++)
+        for (size_t i = 0; i <= capacity LEFT_CANARY_ADD; i++)  //не работает? невозможно
             data[capacity LEFT_CANARY_ADD + i] = POISON;
     }
-    printf("capacity %d\n", new_capacity);
+    printf("capacity %lld\n", new_capacity);
 
     stk->capacity = new_capacity;
     stk->data = data;

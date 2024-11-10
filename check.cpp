@@ -87,8 +87,8 @@ void print_stk_elements(Stack* stk)
     assert (stk != nullptr);
 
     int* data = stk->data;
-    int size = stk->size;
-    int capacity = stk->capacity;
+    size_t size = stk->size;
+    size_t capacity = stk->capacity;
     
     for (size_t i = LEFT_CANARY_ADD; i < capacity; i++)
     {
@@ -97,8 +97,8 @@ void print_stk_elements(Stack* stk)
         else
             printf("   ");
         if (data[i] == POISON)
-            printf("[%d] = %d (POISON)\n", i, POISON);
+            printf("[%lld] = %d (POISON)\n", i, POISON);
         else
-            printf("[%d] = %d\n", i, data[i]);
+            printf("[%lld] = %d\n", i, data[i]);
     }
 }
