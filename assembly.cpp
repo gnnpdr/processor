@@ -2,7 +2,7 @@
 
 #include "assembly.h"
 
-static void fill_labels(Labels *const labels, Text *const input);
+static void fill_labels(Labels *const labels, Text *const input, Stack* functions);
 static bool find_label_mark (const char* const str);
 static bool find_arg (const char *const str);
 static size_t find_label(Labels* labels, const char *const str);
@@ -22,18 +22,12 @@ static bool find_register (const char *const str, int *const arg);
 
 static void print_binary_int (int a);
 
-void assembly (Text *const input, Labels *const labels, Stack* new_buf)
+void assembly (Text *const input, Labels *const labels, Stack* new_buf, Stack* functions)
 {
     assert(input  );
     assert(labels );
     assert(new_buf);
-    
-    fill_labels(labels, input);  //все лэблы хорошо работают, можно еще поправить в каретках, чтобы без пробела было, тогда костыля не будет.
-    //for (size_t i = 0; i < LABELS_AMT; i++)
-    //{
-    //    printf("%s\n", labels->labels[i].name);
-    //    printf("%d\n", labels->labels[i].target);
-    //}
+    fill_labels(labels, input, functions);
 
     handle_commands(labels, input, new_buf);
 }
@@ -53,10 +47,11 @@ Errors ctor_labels(Labels* labels)
     return ALL_RIGHT;
 }
 
-void fill_labels(Labels *const labels, Text *const input)
+void fill_labels(Labels *const labels, Text *const input, Stack* functions)
 {
     assert(labels);
     assert(input );
+    assert(functions);
 
     char** buf = input->addresses;
     bool is_label = false;
@@ -66,11 +61,11 @@ void fill_labels(Labels *const labels, Text *const input)
 
     for (size_t word_cnt = 0; word_cnt < input->cmd_amt; word_cnt++)
     {
-        //printf("-------------------------------------------------------------\n");
+        printf("-------------------------------------------------------------\nLABELS\n");
         //printf("word_cnt = %d\n", word_cnt);
 
         strncpy(str, buf[word_cnt], MAX_STR_LEN);
-        //printf("str = %s\n", str);
+        printf("str = %s\n", str);
         
         is_label = find_label_mark(str);
         //printf("is_label = %d\n", is_label);
@@ -79,23 +74,34 @@ void fill_labels(Labels *const labels, Text *const input)
             continue;
 
         label_ind = find_label(labels, str);
-        //printf("label_ind = %d\n", label_ind);
+        printf("label_ind = %d\n", label_ind);
 
         is_arg = find_arg(buf[word_cnt - 1]);
-        //printf("is_arg = %d\n", is_arg);
+        printf("is_arg = %d\n", is_arg);
 
-        if (!is_arg && label_ind != START_VALUE)  //проблемы могут быть со вторым условием
+        if (!is_arg && label_ind != START_VALUE && strncmp(RET_STR, buf[word_cnt], MAX_STR_LEN) != 0)  //проблемы могут быть со вторым условием
         {
-            //printf("HERE!!\n");
             labels->labels[label_ind].target = (int)word_cnt;  //может быть разный размер слова, разное количество бит, в побитовом файле в таком случае могут возникнуть проблемы, это стоит учитывать
             
             labels->labels[label_ind].name = buf[word_cnt];
-            //printf("name %s, target %d\n", labels->labels[label_ind].name, labels->labels[label_ind].target);
-            label_ind = START_VALUE;
+            printf("name %s, target %d\n", labels->labels[label_ind].name, labels->labels[label_ind].target);
         }
+        else if (is_arg && strncmp(RET_STR, buf[word_cnt], MAX_STR_LEN) == 0)
+        {
+            stk_push(functions, word_cnt);
+        }
+            
 
         is_label = false;
     }
+
+    /*printf("----------------------------------------------------------------\nADDRESSES\n");//ПРОБЛЕМА!! ЗАПОЛНЯЕТ ВСЕ ЯЧЕЙКИ NEXT:
+    for (int i = 0; i < LABELS_AMT; i++)
+    {
+        printf("int %d\n", i);
+        printf("%s\n", labels->labels[i].name);
+    }*/
+        
 }
 
 bool find_label_mark (const char* const str)
@@ -214,7 +220,7 @@ Errors find_cmd_num(char *const str, size_t* cmd)
         }
         else if (cmd_num > CMD_AMT - 1)
         {
-            printf("there is no such command\n");
+            //printf("there is no such command\n");
             return SYN_ERROR;
         }
     }
@@ -316,7 +322,7 @@ Errors arg_analysis (Text *const input, int *const arg1, int *const arg2)
 
     //printf("\nARG %s\n", str);
 
-    bool is_register = find_register(str, arg1);  //енамы сделала, а функция все равно нужна
+    bool is_register = find_register(str, arg1);
 
     
     //printf("%s, %d\n", str, sscanf_check);
@@ -327,20 +333,26 @@ Errors arg_analysis (Text *const input, int *const arg1, int *const arg2)
         is_int = true;
     //SSCANF_CHECK
 
+    //printf("is_int %d\n", is_int);
+
     if (strcmp(str, "[") == 0)
     {
+        input->cmd_num = cmd_num;
         RAM_case(arg1, arg2, input);
+        cmd_num = input->cmd_num;
     }
     else if (is_register)
     {
         *arg1 |= REG;
         //print_binary_int (*arg1);
     }
-    else if (is_int)
+    else if (is_int)  //ну вот, трабл в том, что с отрицательными числами фигня, надо другой алгоритм
     {
         sscanf(file_buf, "%d", arg1);
         *arg1 |= INT;
     }
+
+    //printf("arg %d\n", *arg1);
 
     input->cmd_num = cmd_num;
 
@@ -353,35 +365,39 @@ void RAM_case (int *const arg1, int *const arg2, Text *const input)
     assert(arg1);
     assert(arg2);
 
+    //printf("ram case\n");
     *arg1 |= RAM;
     *arg2 |= RAM;
     //print_binary_int (*arg1);
     
     size_t cmd_num = input->cmd_num;
     char str[MAX_STR_LEN] = "";
-    bool is_register = find_register(str, arg1);
-
+    
     cmd_num++;
     char* file_buf = input->addresses[cmd_num];
     sscanf (file_buf, "%s", str);   //тоже надо сделать проверку 
+    //printf("this string %s\n", str);
+    bool is_register = find_register(str, arg1);
 
     if (is_register)
     {
         *arg1 |= REG;
-        
     }
         
     else
     {
         sscanf(file_buf, "%d", arg1);
+        //printf("int arg1 %d\n", *arg1);
         *arg1 |= INT;
         
         cmd_num++;
         file_buf = input->addresses[cmd_num];
         sscanf (file_buf, "%s", str);
+        //printf("next str %s\n", str);
 
         if (strcmp(str, "+") == 0)
         {
+            //printf("plus case\n");
             plus_case(&cmd_num, input, arg2);
             *arg2 |= REG;
         }
@@ -422,16 +438,16 @@ bool find_register (const char *const str, int *const arg)
 
     for (size_t i = 0; i < REG_AMT; i++)
     {
-        if (strcmp(registers[i].name, str) == 0)
+        if (strcmp(registers[i]->name, str) == 0)
         {
-            printf("%s %d\n", registers[i].name, (int)registers[i].num);
+            //printf("%s %d\n", registers[i].name, (int)registers[i].num);
             is_register = true;
-            *arg = (int)registers[i].num;
+            *arg = (int)registers[i]->num;
             return is_register;
         } 
     }
 
-    printf("there is no such register\n");
+    //printf("there is no such register\n");
 
     return is_register;
 }
@@ -484,7 +500,7 @@ void print_binary_int (int a)
     int k = 0;
     while (k < INT_BYTE_SIZE)
     {
-        printf("%d", bin_str[k]);
+        //printf("%d", bin_str[k]);
         k++;
         if (k % 4 == 0)
             printf(" ");

@@ -21,29 +21,25 @@ Errors get_name(Text *const input, char **const argv)
 
 
 Errors get_file_data(Text *const input)  //может, можно унифицировать эту функцию?
-{
-    assert(input);
+{  
+     assert(input);
 
     FILE* file; 
     file = fopen(input->name, "rb");
     FILE_CHECK(file)
-    //printf("wow 1\n");
     size_t size = find_file_size(input->name);
 
     char* file_buf = (char*)calloc(size, sizeof(char));
     ALLOCATION_CHECK(file_buf)
-    //printf("wow 2\n");
     size_t read_result = fread(file_buf, sizeof(char), size, file);
     if (read_result != size)
     {
-        fputs("Ошибка чтения", stderr);
+        fputs("read error", stderr);
         return READ_ERROR;
     }
-    //printf("wow 3\n");
     if(fclose(file) != 0)
         return CLOSE_ERROR;
 
-    //printf("wow 4\n");
     input->file_buf = file_buf;
     input->init_file_size = size;
 
@@ -109,9 +105,14 @@ void remove_carriage(Text *const input)
         symb_num++;
     }
 
+    //printf("STRINGS!\n");
     for (size_t i = 0; i < word_cnt; i++)
+    {
         input->addresses[i] = addresses[i]; 
-
+        //printf("%s\n", addresses[i]);
+    }
+        
+    //printf("CMD_AMT = %d\n", word_cnt);
     input->file_buf = buf;
     input->cmd_amt = word_cnt;
 }

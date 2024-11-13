@@ -3,7 +3,7 @@
 #include "stack.h"
 #include <assert.h>
 
-static const size_t MAX_CMD_AMT = 100;
+static const size_t MAX_CMD_AMT = 500;
 
 static const char COMMENT_MARK = ';';
 

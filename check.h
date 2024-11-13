@@ -24,7 +24,7 @@ struct Stack
     unsigned long long right_canary;
     #endif
 
-    stack_element_t* data;
+    int* data;
     size_t size;
     size_t capacity = stk_amount;
 };

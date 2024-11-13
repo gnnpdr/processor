@@ -14,14 +14,15 @@ static void jb(Processor* proc, Stack* stk);
 static void jbe(Processor* proc, Stack* stk);
 static ResultOfComparing comparing(int first_el, int sec_el);
 
+static void print_regs (RegisterParameters* registers);
+
 //надо попробовать унифицировать функцию для получения имени
 
-void proc_file (Stack* const stk, Processor* const proc)
+void proc_file (Stack* const stk, Processor* const proc, Stack* functions)
 {
-    //get_file(proc);  //ну да, надо было продуманнее быть
-    //printf("here!!\n");
-    //printf("");
     size_t size = proc->ncmd;
+
+    size_t ret_cnt = 0;
     
     size_t ip = proc->ip;
     int* program = proc->new_file_buf;
@@ -30,21 +31,42 @@ void proc_file (Stack* const stk, Processor* const proc)
     int sec_el = 0;
     int arg = 0;
 
+    
     //printf("here\n");
 
     //printf("%d,\n %d,\n, %p\n", size, ip, program);
+    
 
     while(ip < size)
     {
+        /*int a = 0;
+        scanf("%d", &a);
+
+        printf("==========================================\nREGISTERS\n");  //ПРОБЛЕМА!! АДРЕСА У ВСЕХ РЕГИСТРОВ НУЛЕВЫЕ 00000FFFFF
+        for (int i = 0; i <REG_AMT; i++)
+        {
+            printf("name %s\n", registers[i]->name);
+            printf("address %p\n", registers + i);
+            printf("value %d\n", registers[i]->value);
+            printf("num %d\n", registers[i]->num);
+            printf("- - - - - - - - - - \n");
+        }
+        printf("REGS END\n");
+
 
         printf("IP = %d\n", ip);
-        printf("CMD = %d\n", program[ip]);
+        printf("CMD = %d\n", program[ip]);*/
+
         switch(program[ip])
         {
             case PUSH:
+                //printf("PUSH\n");
                 proc->ip = ip;
-                stk_push (stk, get_arg(proc));
+                arg = get_arg(proc);
+                //printf("PUSH ARG %d\n", arg);
+                stk_push (stk, arg);
                 ip = proc->ip;
+                //print_regs (registers);
                 break;
 
             case ADD:
@@ -139,24 +161,33 @@ void proc_file (Stack* const stk, Processor* const proc)
                 break;
 
             case POP:
+                //printf("POP\n");
                 proc->ip = ip;
+                //printf("POP ARG ADDRESS %p\n", get_arg_addr(proc));
                 stk_pop (stk, get_arg_addr(proc));
                 ip = proc->ip;
+                //print_regs (registers);
                 break;
 
             case HLT:
+                ip = size + 1;
+                break;
+
+            case RET:
+                ip = functions->data[ret_cnt];
+                ret_cnt;
                 break;
 
             default:
-                printf("something went wrong :(\n");
+                //printf("something went wrong :(\n");
                 break;
         }   
         ip++;
     }
 
-    printf("SOMETHING!\n");
-    for (int i = 0; i < stk->size; i++)
-        printf("%d ", stk[i]);
+    //printf("SOMETHING!\n");
+    //for (int i = 0; i < stk->size; i++)
+    //    printf("%d ", stk[i]);
 }
 
 Errors get_file(Processor* proc)
@@ -190,6 +221,7 @@ int get_arg (Processor* proc)
 
     ip++;   //переход на аргументы
     int arg = program[ip];
+    //printf("ARG BEFORE WORK %d\n", arg);
     int res_arg = 0;
 
     bool is_ram = false;
@@ -208,7 +240,7 @@ int get_arg (Processor* proc)
 
     if ((arg & REG) == REG)
     {
-        res_arg += registers[arg & FREE].value;
+        res_arg += registers[arg & FREE]->value;
     }
     else 
         ip--;
@@ -217,6 +249,8 @@ int get_arg (Processor* proc)
         res_arg = proc->RAM[res_arg];
 
     proc->ip = ip;
+
+    //printf("ARG FOR PUSH %d\n", res_arg);
     
     return res_arg;
 }
@@ -228,6 +262,7 @@ int* get_arg_addr (Processor* proc)
 
     ip++;   //переход на аргументы
     int* arg = &program[ip];
+    //printf("POP GET ARG FROM PROGRAM\nvalue %d\n", *arg);
 
     int* res_addr = 0;
     int res_arg = 0;
@@ -252,9 +287,17 @@ int* get_arg_addr (Processor* proc)
         is_reg = true;
 
         if (is_ram == true)
-            res_arg += registers[(*arg) & FREE].value;
+        {
+            res_arg += registers[(*arg) & FREE]->value;
+        }
+            
         else
-            res_addr = &registers[(*arg) & FREE].value;
+        {
+            //printf("VALUE %d\n", (*arg) & FREE);
+            //printf("ADDRESS (bx) %p\n", &registers[(*arg) & FREE]->value);
+            res_addr = &registers[(*arg) & FREE]->value;
+        }
+            
     }
 
     if (!is_reg && !is_ram)
@@ -283,8 +326,8 @@ void ja(Processor* proc, Stack* stk)
     stk_pop(stk, &sec_el);
     stk_pop(stk, &first_el);
 
-    printf("HERE!\n");
-    printf("f el = %d, s el = %d\n", first_el, sec_el);
+    //printf("HERE!\n");
+    //printf("f el = %d, s el = %d\n", first_el, sec_el);
 
     DoJump do_jump = NO_JUMP;
     
@@ -296,7 +339,7 @@ void ja(Processor* proc, Stack* stk)
     if(do_jump == DO_JUMP)
         ip = arg;
 
-    printf("do jump = %d, ip = %d, arg = %d\n", do_jump, ip, arg);
+    //printf("do jump = %d, ip = %d, arg = %d\n", do_jump, ip, arg);
     proc->ip = ip;
 }
 
@@ -311,6 +354,8 @@ void jae (Processor* proc, Stack* stk)
 
     stk_pop(stk, &sec_el);
     stk_pop(stk, &first_el);
+
+    //printf("sec el %d\nfirst el %d\n",sec_el, first_el);
 
     DoJump do_jump = NO_JUMP;
 
@@ -360,15 +405,24 @@ void jbe (Processor* proc, Stack* stk)
     stk_pop(stk, &sec_el);
     stk_pop(stk, &first_el);
 
+    //printf("sec el %d\nfirst el %d\n",sec_el, first_el);
+
     DoJump do_jump = NO_JUMP;
 
     ResultOfComparing res = comparing(first_el, sec_el);
     if (res == LESS || res == EQUAL)
         do_jump = DO_JUMP;
 
+    //printf("do jump %d\n", do_jump);
+
     if(do_jump == DO_JUMP)
         ip = arg;
+    else 
+        ip++;
 
+    //printf("arg %d\n", arg);
+
+    //printf("ip %d\n", ip);
     proc->ip = ip;
 }
 
@@ -430,4 +484,17 @@ ResultOfComparing comparing(int first_el, int sec_el)
 
     else 
         return LESS;
+}
+
+void print_regs (RegisterParameters* registers)
+{
+    printf("----------------------------------------------------------------------------------\n");
+    printf("REGS\n");
+    for (size_t i = 0; i < REG_AMT; i++)
+        printf("%d ", registers->value);
+    
+    printf("\n");
+    printf("----------------------------------------------------------------------------------\n");
+    
+
 }

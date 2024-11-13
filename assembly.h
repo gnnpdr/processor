@@ -7,9 +7,9 @@
 static const int BITS_IN_BYTES = 8;
 static const int INT_BYTE_SIZE = sizeof(int)*BITS_IN_BYTES;
 
-static const size_t CMD_AMT     =  18;
+static const size_t CMD_AMT     =  19;
 static const int    START_VALUE =  -1;
-static const size_t OUT_AMT     = 100;
+static const size_t OUT_AMT     = 500;
 static const size_t MAX_STR_LEN =  80;
 static const char   START_CHAR  = 'a';
 
@@ -29,6 +29,8 @@ static const char* JB_STR = "jb";
 static const char* JAE_STR = "jae";
 static const char* JNE_STR = "jne";
 static const char* JBE_STR = "jbe";
+
+static const char* RET_STR = "ret";
 
 static const size_t MK_ARGS_STRS = 6;
 
@@ -68,10 +70,10 @@ struct Labels
 
 enum Registers
 {
-    AX = 1,
-    BX = 2,
-    CX = 3,
-    DX = 4
+    AX = 0,
+    BX = 1,
+    CX = 2,
+    DX = 3
 };
 
 
@@ -87,16 +89,16 @@ static const char* BX_STR = "bx";
 static const char* CX_STR = "cx";
 static const char* DX_STR = "dx";
 
-const struct RegisterParameters ax = {.value = START_VALUE, .name = AX_STR, .num = AX};
-const struct RegisterParameters bx = {.value = START_VALUE, .name = BX_STR, .num = BX};
-const struct RegisterParameters cx = {.value = START_VALUE, .name = CX_STR, .num = CX};
-const struct RegisterParameters dx = {.value = START_VALUE, .name = DX_STR, .num = DX};
+static struct RegisterParameters ax = {.value = START_VALUE, .name = AX_STR, .num = AX};
+static struct RegisterParameters bx = {.value = START_VALUE, .name = BX_STR, .num = BX};
+static struct RegisterParameters cx = {.value = START_VALUE, .name = CX_STR, .num = CX};
+static struct RegisterParameters dx = {.value = START_VALUE, .name = DX_STR, .num = DX};
 
 
-static struct RegisterParameters registers [REG_AMT] = { ax,
-                                                        bx,
-                                                        cx,
-                                                        dx };
+static struct RegisterParameters* registers [REG_AMT] = { &ax,
+                                                         &bx,
+                                                         &cx,
+                                                         &dx };
 
 
 enum CommandsNums
@@ -118,7 +120,8 @@ enum CommandsNums
     JBE   = 15,
     JE    = 16,
     JNE   = 17,
-    JMP   = 18
+    JMP   = 18,
+    RET   = 19
 };
 
 struct CommandParameters 
@@ -133,7 +136,7 @@ enum ArgType
     INT = 1 << (sizeof(int)*BITS_IN_BYTES - 1),
     REG = 1 << (sizeof(int)*BITS_IN_BYTES - 2),
     RAM = 1 << (sizeof(int)*BITS_IN_BYTES - 3),
-    FREE = ~(7 << (sizeof(int)*BITS_IN_BYTES - 3)),  //снимает маску
+    FREE = ~(7 << (sizeof(int)*BITS_IN_BYTES - 3)),
 };
 
 
@@ -155,6 +158,7 @@ const struct CommandParameters JbeStr   =  {.cmd_str = "jbe"  , .cmd_num = JBE  
 const struct CommandParameters JeStr    =  {.cmd_str = "je"   , .cmd_num = JE   , .arg_amt = 1};
 const struct CommandParameters JneStr   =  {.cmd_str = "jne"  , .cmd_num = JNE  , .arg_amt = 1};
 const struct CommandParameters JmpStr   =  {.cmd_str = "jmp"  , .cmd_num = JMP  , .arg_amt = 1};
+const struct CommandParameters RetStr   =  {.cmd_str = "ret"  , .cmd_num = RET  , .arg_amt = 0};
 
 static const CommandParameters bunch_of_commands [CMD_AMT]  =   {PushStr,
                                                                 AddStr   ,
@@ -173,7 +177,8 @@ static const CommandParameters bunch_of_commands [CMD_AMT]  =   {PushStr,
                                                                 JbeStr   ,
                                                                 JeStr    ,
                                                                 JneStr   ,
-                                                                JmpStr   };
+                                                                JmpStr   ,
+                                                                RetStr   ,};
 
 #define SSCANF_CHECK   do                                  \
                         {                                  \
@@ -183,7 +188,7 @@ static const CommandParameters bunch_of_commands [CMD_AMT]  =   {PushStr,
                             }                              \
                         }while(0);
 
-void assembly (Text *const input, Labels *const labels, Stack* new_buf);
+void assembly (Text *const input, Labels *const labels, Stack* new_buf, Stack* functions);
 Errors ctor_labels(Labels* labels);
 void dtor_labels(Labels* labels);
 Errors make_binary_file (Stack *const new_buf);

@@ -13,7 +13,7 @@ static const int double_delta = 4;
 void stk_push(Stack* stk, stack_element_t element);
 
 void stk_pop(Stack* stk, stack_element_t* elem);
-void change_capacity(Stack* stk, size_t new_capacity, size_t capacity);
+void change_capacity(Stack* stk);
 
 void stk_ctor(Stack* stk);
 

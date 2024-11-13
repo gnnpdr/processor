@@ -1,0 +1,20 @@
+push 1
+pop bx
+push 1
+push 5
+pop ax
+pop cx
+next:
+push cx
+push bx
+mul
+pop bx
+push cx
+push 1
+add
+pop cx
+push cx
+push ax
+jbe next:
+push bx
+hlt

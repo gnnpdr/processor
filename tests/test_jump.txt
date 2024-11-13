@@ -2,6 +2,6 @@ push 3
 next:
 push 5
 push 4
-jump 0 next:
+ja next:
 add
 hlt
