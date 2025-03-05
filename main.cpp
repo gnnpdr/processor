@@ -1,55 +1,137 @@
 #include <stdio.h>
 
-#include "check.h"
-#include "stack.h"
-#include "input.h"
-#include "assembly.h"
-#include "proc.h"
+#include "input\get_database.h"
+#include "input\input.h"
+#include "assembly\assembly.h"
+#include "proc\proc.h"
+#include "disassembly\disassembly.h"
 
-int main (int argc, char** argv)
+void asm_to_dig(char** argv, ErrList *const list);
+void proc_dig_code(ErrList *const list);
+void disasm(ErrList *const list);
+
+int main(int argc, char** argv)
 {
-    /*printf("IN MAIN\n");
-    printf("==========================================\nREGISTERS\n");  //ПРОБЛЕМА!! АДРЕСА У ВСЕХ РЕГИСТРОВ НУЛЕВЫЕ 00000FFFFF
-    for (int i = 0; i <REG_AMT; i++)
-    {
-        printf("name %s\n", registers[i]->name);
-        printf("address %p\n", registers + i);
-        printf("value %d\n", registers[i]->value);
-        printf("num %d\n", registers[i]->num);
-    }
+	ErrList list = {};
+	error_list_ctor(&list);
+	MAIN
 
-    printf("END START REGS\n");*/
-    Text input = {};
+	//asm_to_dig(argv, &list);
+	//MAIN
 
-    get_name(&input, argv);
+	//proc_dig_code(&list);
+	//MAIN
 
-    get_file_data(&input);
+	disasm(&list);
+	MAIN
 
-    remove_carriage(&input);
+	error_list_dtor(&list);
 
-    Labels labels = {};
-    Stack functions = {};  //для ret
-    stk_ctor(&functions);
-    ctor_labels(&labels);
+	return 0;
+}
 
-    Stack new_buf = {};
-    stk_ctor(&new_buf);
+void asm_to_dig(char** argv, ErrList *const list)
+{
+	assert(list);
 
-    assembly(&input, &labels, &new_buf, &functions);
-    dtor_labels(&labels);
+	Input asm_text = {};
+    input_ctor(&asm_text, list);
+	RETURN_VOID
 
-    Stack stk = {};
-    stk_ctor(&stk);
+    fill_input(&asm_text, argv[1], list);
+	RETURN_VOID
 
-    Processor proc = {};
-    proc.new_file_buf = new_buf.data;
-    proc.ncmd = new_buf.size;
-    proc_file (&stk, &proc, &functions);
+	Word* words = word_list_ctor(list);
+	get_code(&asm_text, words, list);
 
-    
+	LabelParameters* labels = ctor_labels(list);
+	FuncParameters* funcs = ctor_funcs(list);
 
-    input_dtor(&input);
-    stk_dtor(&stk);
-    stk_dtor(&new_buf);
-    stk_dtor(&functions);
+    Stack stk_code = {};
+    stk_ctor(&stk_code, list);
+	RETURN_VOID
+
+    assembly(words, labels, funcs, &stk_code, list);
+	RETURN_VOID
+
+	dtor_funcs(funcs);
+	dtor_labels(labels);
+	word_list_dtor(words);
+    stk_dtor(&stk_code);
+	input_dtor(&asm_text);
+}
+
+void proc_dig_code(ErrList *const list)
+{
+	assert(list);
+
+	Input bin_code = {};
+    input_ctor(&bin_code, list);
+	RETURN_VOID
+
+	char* dig_file_name = (char*)calloc(MAX_STR_LEN, sizeof(char));
+	printf("ENTER DIG FILE NAME!\n");
+	scanf("%s", dig_file_name);
+	fill_input(&bin_code, dig_file_name, list);
+	RETURN_VOID
+
+	free(dig_file_name);
+
+	int* code = (int*)calloc(MAX_FILE_SIZE, sizeof(int));
+	size_t dig_amt = 0;
+
+	get_bin_code(&bin_code, code, &dig_amt, list);
+	Proc proc = {};
+	proc_ctor(&proc, list);
+	RETURN_VOID
+
+	proc.size = dig_amt;
+	for (int i = 0; i < dig_amt; i++)
+		proc.code[i] = code[i];
+
+	free(code);
+	
+	Stack prog = {};
+    stk_ctor(&prog, list);
+	Stack stk = {};
+    stk_ctor(&stk, list);
+	RETURN_VOID
+
+	proc_code(&proc, &prog, &stk, list);
+
+	stk_dtor(&stk);
+	stk_dtor(&prog);
+	proc_dtor(&proc);
+	input_dtor(&bin_code);
+}
+
+void disasm(ErrList *const list)
+{
+	assert(list);
+
+	Input bin_code = {};
+    input_ctor(&bin_code, list);
+	RETURN_VOID
+
+	char* dig_file_name = (char*)calloc(MAX_STR_LEN, sizeof(char));
+	printf("ENTER DIG FILE NAME!\n");
+	scanf("%s", dig_file_name);
+	fill_input(&bin_code, dig_file_name, list);
+	RETURN_VOID
+
+	free(dig_file_name);
+
+	size_t dig_amt = 0;
+	int* code = (int*)calloc(MAX_FILE_SIZE, sizeof(int));
+	get_bin_code(&bin_code, code, &dig_amt, list);
+
+	char* text = (char*)calloc(MAX_FILE_SIZE, sizeof(char));
+
+	disassembly(code, text, dig_amt, list);
+	RETURN_VOID
+
+	free(code);
+	free(text);
+
+	input_dtor(&bin_code);
 }

@@ -1,7 +1,0 @@
-push 3
-next:
-push 5
-push 4
-ja next:
-add
-hlt

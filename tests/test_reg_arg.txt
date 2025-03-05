@@ -1,4 +1,0 @@
-push bx
-push 5
-add
-hlt
