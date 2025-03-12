@@ -16,11 +16,11 @@ int main(int argc, char** argv)
 	error_list_ctor(&list);
 	MAIN
 
-	//asm_to_dig(argv, &list);
-	//MAIN
+	asm_to_dig(argv, &list);
+	MAIN
 
-	//proc_dig_code(&list);
-	//MAIN
+	proc_dig_code(&list);
+	MAIN
 
 	disasm(&list);
 	MAIN

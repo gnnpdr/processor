@@ -2,7 +2,7 @@
 
 #include "proc.h"
 
-static int get_arg(Proc *const proc, size_t *const ip);
+static int get_arg(Proc *const proc, size_t *const ip, ErrList *const list);
 static void give_arg(Proc *const proc, Stack *const prog, size_t *const ip, ErrList *const list);
 
 static ResultOfComparing comparing(int first_el, int sec_el);
@@ -28,20 +28,26 @@ void proc_ctor(Proc *const proc, ErrList *const list)
     int* RAM = (int*)calloc(RAM_AMT, sizeof(int));
     ALLOCATION_CHECK_VOID(RAM)
 
+    int* registers = (int*)calloc(REG_AMT, sizeof(int));
+    ALLOCATION_CHECK_VOID(registers)
 
     for (size_t i = 0; i < RAM_AMT; i++)
         RAM[i] = POISON;
 
+    for (size_t i = 0; i < REG_AMT; i++)
+        registers[i] = POISON;
+
+    proc->registers = registers;
     proc->code = code;
     proc->RAM = RAM;
 }
 
 void proc_dtor(Proc *const proc)
 {
+    free(proc->registers);
     free(proc->code);
     free(proc->RAM);
 }
-
 
 void proc_code(Proc *const proc, Stack *const prog, Stack *const stk, ErrList *const list)
 {
@@ -60,11 +66,12 @@ void proc_code(Proc *const proc, Stack *const prog, Stack *const stk, ErrList *c
 
     while(ip < size)
     {
-
+        //printf("IP %d\nCOM %d\n", ip, code[ip]);
         switch(code[ip])
         {
             case PUSH_A:
-                arg = get_arg(proc, &ip);
+                //printf("push\n");
+                arg = get_arg(proc, &ip, list);
                 stk_push(prog, arg, list);
                 break;
 
@@ -113,7 +120,7 @@ void proc_code(Proc *const proc, Stack *const prog, Stack *const stk, ErrList *c
                 break;
 
             case JMP_A:
-                arg = get_arg(proc, &ip);
+                arg = get_arg(proc, &ip, list);
                 ip = arg;
                 break;
 
@@ -138,7 +145,6 @@ void proc_code(Proc *const proc, Stack *const prog, Stack *const stk, ErrList *c
                 stk_pop(prog, &arg, list);
                 printf("!! %d !!\n", arg);
                 break;
-            //    break;
 
             default:
                 printf("problem\n");
@@ -149,10 +155,10 @@ void proc_code(Proc *const proc, Stack *const prog, Stack *const stk, ErrList *c
         /*printf("RAM\n");
         for (size_t i = 0; i < 10; i++)
             printf("%d ", proc->RAM[i]);
-        printf("\nRAM END\n\n");*/
+        printf("\nRAM END\n\n");
 
-        //int a = 0;
-        //scanf("%d", &a);
+        int a = 0;
+        scanf("%d", &a);*/
     }
 }
 
@@ -160,8 +166,6 @@ void proc_code_part(Proc *const proc, Stack *const prog, Stack *const stk, size_
 {
     assert(proc);
     assert(list);
-
-    //printf("GET PART\n");
 
     size_t size = proc->size;
 
@@ -179,7 +183,7 @@ void proc_code_part(Proc *const proc, Stack *const prog, Stack *const stk, size_
         {
             case PUSH_A:
                 //printf("push\n");
-                arg = get_arg(proc, ip);
+                arg = get_arg(proc, ip, list);
                 //printf("ARG %d\n\n", arg);
                 stk_push(prog, arg, list);
                 break;
@@ -235,7 +239,7 @@ void proc_code_part(Proc *const proc, Stack *const prog, Stack *const stk, size_
                 break;
 
             case JMP_A:
-                arg = get_arg(proc, ip);
+                arg = get_arg(proc, ip, list);
                 *ip = arg;
                 break;
 
@@ -257,7 +261,7 @@ void proc_code_part(Proc *const proc, Stack *const prog, Stack *const stk, size_
             case RET_A:
                 //printf("RET\n");
                 get_ret (proc, stk, ip, list);
-                return; //обязательно! именно эта часть и вернет из функции get call
+                return;
                 break;
 
             default:
@@ -275,6 +279,8 @@ void proc_code_part(Proc *const proc, Stack *const prog, Stack *const stk, size_
     }
 }
 
+//---------------------------FUNC-THINGS------------------------------------------------------
+
 void get_call(Proc *const proc, Stack *const prog, Stack *const stk, size_t *const ip, ErrList *const list)
 {
     assert(proc);
@@ -283,8 +289,8 @@ void get_call(Proc *const proc, Stack *const prog, Stack *const stk, size_t *con
     assert(ip);
 
     int* code = proc->code;
-    
-    (*ip)++;
+
+    (*ip) += 2;
     stk_push(stk, *ip, list);
     (*ip) = code[*ip];
 
@@ -304,43 +310,58 @@ void get_ret (Proc *const proc, Stack *const stk, size_t *const ip, ErrList *con
     *ip = ret_ip;
 }
 
-int get_arg(Proc *const proc, size_t *const ip)
+//-------------ARGS-------------------------------------------------------------
+
+int get_arg(Proc *const proc, size_t *const ip, ErrList *const list)
 {
     assert(proc);
     assert(ip);
 
-    (*ip)++;
-    int arg = 0;
     int* prog = proc->code;
     int* RAM = proc->RAM;
-
-    /*ARG_NUM, 
-    ARG_LAB,
-    ARG_RAM,
-    ARG_REG*/
-    //printf("TYPE %d\n\n", prog[*ip]);
-
-    if (prog[*ip] == ARG_NUM || prog[*ip] == ARG_LAB)
+    int* registers = proc->registers;
+    (*ip) += 2;
+    
+    switch(prog[(*ip) - 1])
     {
-        //printf("NUM\n");
-        (*ip)++;
-        return prog[*ip];
+        case ARG_NUM:
+        case ARG_LAB:
+            return prog[*ip];
+        case ARG_RAM:
+            return RAM[prog[*ip]];
+        case ARG_REG:
+            return registers[*ip];
+        default:
+            printf("ERROR VALUE ARG TYPE\n");
+            ERROR(SYN_ERROR)
+            return ERROR_VALUE_INT;
     }
-    else if (prog[*ip] == ARG_RAM)
-    {
-        //printf("RAM\n");
-        (*ip)++;
-        //printf("PLACE %d\n\n", prog[*ip]);
-        arg = RAM[prog[*ip]];
-        //printf("ARG %d\n\n", arg);
-    }
-    /*else if (prog[ip] == ARG_REG)
-    {
-
-    }*/
-
-   return arg;
 }
+
+void give_arg(Proc *const proc, Stack *const prog, size_t *const ip, ErrList *const list)
+{
+    assert(proc);
+    assert(prog);
+    assert(ip);
+    assert(list);
+
+    int arg = 0;
+    int* code = proc->code;
+    int* RAM = proc->RAM;
+    int* registers = proc->registers;
+    (*ip)++;
+
+    if (code[*ip] == ARG_RAM)
+    {
+        stk_pop(prog, &arg, list);
+        (*ip)++;
+        RAM[code[*ip]] = arg;
+    }
+    else
+        (*ip)++;
+}
+
+//------------------------JMPS------------------------------------------------
 
 void ja(Proc* proc, Stack* prog, size_t *const ip, ErrList *const list)
 {
@@ -364,16 +385,10 @@ void ja(Proc* proc, Stack* prog, size_t *const ip, ErrList *const list)
 
     ResultOfComparing res = comparing(first_el, sec_el);
     if (res == GREATER_RES)
-    {
-        //printf("0 IS GREATER THAN DISCR\n");
         do_jump = true;
-    }
         
     if(do_jump)
-    {
-        //printf("NEW IP %d\n", new_ip);
         *ip = new_ip;
-    }
         
 }
 
@@ -506,18 +521,10 @@ void jne(Proc* proc, Stack* prog, size_t *const ip, ErrList *const list)
 
     ResultOfComparing res = comparing(first_el, sec_el);
     if (res != EQUAL_RES)
-    {
-        //printf ("THEY ARE NOT EQUAL\n");
         do_jump = true;
-    }
-        
 
     if(do_jump)
-    {
-        //printf("NEW IP %d\n", new_ip);
         *ip = new_ip;
-    }
-        
 }
 
 ResultOfComparing comparing(int first_el, int sec_el)
@@ -530,44 +537,4 @@ ResultOfComparing comparing(int first_el, int sec_el)
 
     else 
         return LESS_RES;
-}
-
-void give_arg(Proc *const proc, Stack *const prog, size_t *const ip, ErrList *const list)
-{
-    assert(proc);
-    assert(prog);
-    assert(ip);
-    assert(list);
-
-    (*ip)++;
-    int arg = 0;
-    int* code = proc->code;
-    int* RAM = proc->RAM;
-
-    /*ARG_NUM, 
-    ARG_LAB,
-    ARG_RAM,
-    ARG_REG*/
-
-    if (code[*ip] == ARG_NUM)  //при ассемблировании тут будет фиктивное значение
-        (*ip)++;
-
-    else if (code[*ip] == ARG_RAM)
-    {
-        //printf("RAM case\n\n");
-        stk_pop(prog, &arg, list);
-        //printf("ARG RAM %d\n\n", arg);
-        (*ip)++;
-        //printf("PLACE %d\n\n", code[*ip]);
-        RAM[code[*ip]] = arg;
-
-        //printf("RAM\n\n");
-        //for (int i = 0; i < 10; i++)
-        //    printf("%d ", RAM[i]);
-        //printf("RAM END\n\n");
-    }
-    /*else if (code[ip] == ARG_REG)
-    {
-
-    }*/
 }

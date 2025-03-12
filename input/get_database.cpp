@@ -5,7 +5,6 @@
 static void get_database_name(Input *const base_text, char *const input_name, ErrList *const list);
 static void get_database_text (Input *const base_text, ErrList *const list);
 
-//ok
 void input_ctor (Input *const base_text, ErrList *const list)
 {
     assert(base_text);

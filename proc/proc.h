@@ -18,6 +18,7 @@ struct Proc
     size_t size;
     int* code;
     int* RAM;
+    int* registers;
 };
 
 void proc_ctor(Proc *const proc, ErrList *const list);

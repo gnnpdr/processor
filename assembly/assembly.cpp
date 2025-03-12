@@ -6,11 +6,11 @@ static void get_labels(Word *const words, LabelParameters *const labels, ErrList
 static bool find_label_mark(char *const word, size_t len);
 static size_t find_label (LabelParameters *const labels, char *const word, size_t len);
 static size_t handle_cmds(Word *const words, LabelParameters *const labels, FuncParameters *const funcs, Stack *const stk_code, ErrList *const list);
-static void handle_args(size_t word_num, Word word, LabelParameters *const labels, Stack *const stk_code, ErrList *const list);
+static void handle_args(size_t dig_num, Word word, FuncParameters *const funcs, LabelParameters *const labels, Stack *const stk_code, ErrList *const list);
 static void fill_bin_file(const char* const  input_file_name, size_t size, const int* const input_file_data, ErrList *const list);
 static void fill_labels(Word *const words, LabelParameters *const labels, Stack *const stk_code, ErrList *const list);
 
-static size_t find_func (FuncParameters *const funcs, char *const word, size_t len);
+static size_t find_func (FuncParameters *const funcs, Word word);
 static void get_funcs(Word *const words, FuncParameters *const funcs, ErrList *const list);
 
 static size_t find_func_by_ret_num(size_t word_num, FuncParameters* funcs, ErrList *const list);
@@ -208,10 +208,9 @@ void dtor_funcs(FuncParameters *const funcs)
     free(funcs);
 }
 
-size_t find_func (FuncParameters *const funcs, char *const word, size_t len)
+size_t find_func (FuncParameters *const funcs, Word word)
 {
     assert(funcs);
-    assert(word);
 
     size_t func_num = ERROR_VALUE_SIZE_T;
 
@@ -223,7 +222,7 @@ size_t find_func (FuncParameters *const funcs, char *const word, size_t len)
             break;
         }
 
-        int cmp_res = strncmp(word, funcs[num].start_word, len);
+        int cmp_res = strncmp(word.word_start, funcs[num].start_word, word.len);
 
         if (cmp_res == 0)
         {
@@ -254,7 +253,7 @@ void get_funcs(Word *const words, FuncParameters *const funcs, ErrList *const li
         if(cmp_res == 0)
         {
             word++;
-            func_num = find_func(funcs, words[word].word_start, words[word].len);
+            func_num = find_func(funcs, words[word]);
 
             if (funcs[func_num].len == ERROR_VALUE_SIZE_T)
             {
@@ -276,6 +275,21 @@ size_t find_func_by_ret_num(size_t word_num, FuncParameters* funcs, ErrList *con
             return func_num;
     }
     ERROR(SYN_ERROR)
+    return ERROR_VALUE_SIZE_T;
+}
+
+//----------------------REGS-----------------------------
+
+size_t find_reg(Word word)
+{
+    for (size_t num = 0; num < REG_AMT; num++)
+    {
+        int cmp_res = strncmp(word.word_start, registers[num]->name, word.len);
+
+        if (cmp_res == 0)
+            return num;
+    }
+
     return ERROR_VALUE_SIZE_T;
 }
 
@@ -314,7 +328,7 @@ size_t handle_cmds(Word *const words, LabelParameters *const labels, FuncParamet
         
         if (cmd_num == ERROR_VALUE_SIZE_T)
         {
-            size_t func_num = find_func(funcs, words[word].word_start, words[word].len);
+            size_t func_num = find_func(funcs, words[word]);
 
             if (func_num == ERROR_VALUE_SIZE_T)
             {
@@ -331,36 +345,14 @@ size_t handle_cmds(Word *const words, LabelParameters *const labels, FuncParamet
         }
 
         dig_amt++;
-
-        if (bunch_of_commands[cmd_num].cmd_num == CALL_A)
-        {
-            stk_push(stk_code, CALL_A, list);
-            word++;
-
-            size_t func_num = find_func(funcs, words[word].word_start, words[word].len);
-            stk_push(stk_code, funcs[func_num].call_target, list);
-            dig_amt++;
-
-            word++;
-
-            continue;
-        }
-        else if (bunch_of_commands[cmd_num].cmd_num == RET_A)
-        {
-            stk_push(stk_code, RET_A, list);
-            word++;
-            continue;
-        }
-
         stk_push(stk_code, bunch_of_commands[cmd_num].cmd_num, list);
-        
 
-        for (size_t arg = 0; arg < bunch_of_commands[cmd_num].arg_amt; arg++)
+        if (bunch_of_commands[cmd_num].has_args)
         {
             word++;
             dig_amt += 2;
             
-            handle_args(dig_amt, words[word], labels, stk_code, list);
+            handle_args(dig_amt, words[word], funcs, labels, stk_code, list);
         }
           
         word++;
@@ -370,7 +362,7 @@ size_t handle_cmds(Word *const words, LabelParameters *const labels, FuncParamet
 
 //-----------ARGS------------------------
 
-void handle_args(size_t dig_num, Word word, LabelParameters *const labels, Stack *const stk_code, ErrList *const list)
+void handle_args(size_t dig_num, Word word, FuncParameters *const funcs, LabelParameters *const labels, Stack *const stk_code, ErrList *const list)
 {
     assert(labels);
     assert(stk_code);
@@ -402,6 +394,23 @@ void handle_args(size_t dig_num, Word word, LabelParameters *const labels, Stack
             num++;
 
         labels[label].arg_target[num] = dig_num - 1;
+    }
+    else if (isalpha(word.word_start[0]))
+    {
+        size_t reg_num = find_reg(word);
+
+        if (reg_num != ERROR_VALUE_SIZE_T)
+        {
+            stk_push(stk_code, ARG_REG, list);
+            stk_push(stk_code, reg_num, list);
+        }
+        else 
+        {
+            stk_push(stk_code, ARG_FUNC, list);
+
+            size_t func_num = find_func(funcs, word);
+            stk_push(stk_code, funcs[func_num].call_target, list);
+        }
     }
 }
 

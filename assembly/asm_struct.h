@@ -10,7 +10,9 @@ enum ArgType
 {
     ARG_NUM, 
     ARG_LAB,
-    ARG_RAM
+    ARG_RAM,
+    ARG_FUNC,
+    ARG_REG
 };
 
 enum CommandsNums
@@ -58,27 +60,27 @@ struct CommandParameters
 {
     const char*  cmd_str;
     CommandsNums cmd_num;
-    size_t       arg_amt;
+    bool         has_args;
 };
 
-const struct CommandParameters PushStr  =  {"push" , PUSH_A , 1};
-const struct CommandParameters AddStr   =  {"add"  , ADD_A  , 0};
-const struct CommandParameters SubStr   =  {"sub"  , SUB_A  , 0};
-const struct CommandParameters MulStr   =  {"mul"  , MUL_A  , 0};
-const struct CommandParameters DivStr   =  {"div"  , DIV_A  , 0};
-const struct CommandParameters HltStr   =  {"hlt"  , HLT_A  , 0};
-const struct CommandParameters OutStr   =  {"out"  , OUT_A  , 0};
-const struct CommandParameters PopStr   =  {"pop"  , POP_A  , 1};
-const struct CommandParameters JaStr    =  {"ja"   , JA_A   , 1};
-const struct CommandParameters JaeStr   =  {"jae"  , JAE_A  , 1};
-const struct CommandParameters JbStr    =  {"jb"   , JB_A   , 1};
-const struct CommandParameters JbeStr   =  {"jbe"  , JBE_A  , 1};
-const struct CommandParameters JeStr    =  {"je"   , JE_A   , 1};
-const struct CommandParameters JneStr   =  {"jne"  , JNE_A  , 1};
-const struct CommandParameters JmpStr   =  {"jmp"  , JMP_A  , 1};
-const struct CommandParameters CallStr  =  {"call" , CALL_A , 1};
-const struct CommandParameters RetStr   =  {"ret"  , RET_A  , 0};
-const struct CommandParameters SqrtStr  =  {"sqrt" , SQRT_A , 0};
+const struct CommandParameters PushStr  =  {"push" , PUSH_A , true};
+const struct CommandParameters AddStr   =  {"add"  , ADD_A  , false};
+const struct CommandParameters SubStr   =  {"sub"  , SUB_A  , false};
+const struct CommandParameters MulStr   =  {"mul"  , MUL_A  , false};
+const struct CommandParameters DivStr   =  {"div"  , DIV_A  , false};
+const struct CommandParameters HltStr   =  {"hlt"  , HLT_A  , false};
+const struct CommandParameters OutStr   =  {"out"  , OUT_A  , false};
+const struct CommandParameters PopStr   =  {"pop"  , POP_A  , true};
+const struct CommandParameters JaStr    =  {"ja"   , JA_A   , true};
+const struct CommandParameters JaeStr   =  {"jae"  , JAE_A  , true};
+const struct CommandParameters JbStr    =  {"jb"   , JB_A   , true};
+const struct CommandParameters JbeStr   =  {"jbe"  , JBE_A  , true};
+const struct CommandParameters JeStr    =  {"je"   , JE_A   , true};
+const struct CommandParameters JneStr   =  {"jne"  , JNE_A  , true};
+const struct CommandParameters JmpStr   =  {"jmp"  , JMP_A  , true};
+const struct CommandParameters CallStr  =  {"call" , CALL_A , true};
+const struct CommandParameters RetStr   =  {"ret"  , RET_A  , false};
+const struct CommandParameters SqrtStr  =  {"sqrt" , SQRT_A , false};
 
 static const CommandParameters bunch_of_commands [CMD_AMT]  =   {PushStr,
                                                                 AddStr   ,
@@ -134,6 +136,40 @@ struct FuncParameters
 
     size_t ret_word;
 };
+
+//--------------------------------REGISTERS---------------------------------------------------------------
+
+static const size_t REG_AMT = 4;
+
+enum Registers
+{
+    AX = 0,
+    BX = 1,
+    CX = 2,
+    DX = 3
+};
+
+struct RegisterParameters
+{
+    const char* name;
+    Registers reg_num;
+};
+
+static const char* AX_STR = "ax";
+static const char* BX_STR = "bx";
+static const char* CX_STR = "cx";
+static const char* DX_STR = "dx";
+
+static struct RegisterParameters ax = {AX_STR, AX};
+static struct RegisterParameters bx = {BX_STR, BX};
+static struct RegisterParameters cx = {CX_STR, CX};
+static struct RegisterParameters dx = {DX_STR, DX};
+
+static struct RegisterParameters* registers[REG_AMT] = {&ax,
+                                                        &bx,
+                                                        &cx,
+                                                        &dx};
+
 
 //--------------------------------ARGS----------------------------------------------------------------
 
